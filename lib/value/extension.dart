@@ -138,7 +138,6 @@ extension IntExtension on int {
 ///
 ///
 
-
 extension StringExtension on String {
   String get lowercaseFirstChar => replaceFirstMapped(
       RegExp(r'[A-Z]'), (match) => match.group0.toLowerCase());
@@ -181,9 +180,13 @@ extension SizeExtension on Size {
 
   Radius get toRadiusEllipse => Radius.elliptical(width, height);
 
-  Size extrudeHeight(double ratio) => Size(width, width * ratio);
+  Size sizingHeight(double scale) => Size(width, height * scale);
 
-  Size extrudeWidth(double ratio) => Size(height * ratio, height);
+  Size sizingWidth(double scale) => Size(width * scale, height);
+
+  Size extrudingHeight(double value) => Size(width, height + value);
+
+  Size extrudingWidth(double value) => Size(width + value, height);
 }
 
 extension OffsetExtension on Offset {
@@ -309,78 +312,44 @@ extension RectExtension on Rect {
 
   double get distanceDiagonal => size.diagonal;
 
-  Offset offsetFromAlignment(Alignment value) => switch (value) {
-        Alignment.topLeft => topLeft,
-        Alignment.topCenter => topCenter,
-        Alignment.topRight => topRight,
-        Alignment.centerLeft => centerLeft,
-        Alignment.center => center,
-        Alignment.centerRight => centerRight,
-        Alignment.bottomLeft => bottomLeft,
-        Alignment.bottomCenter => bottomCenter,
-        Alignment.bottomRight => bottomRight,
-        _ => throw UnimplementedError(),
-      };
-
   ///
   ///
   /// my usages ------------------------------------------------------------------------------------------------------
   ///
-  Offset offsetFromDirection(Direction2DIn8 value) => switch (value) {
-        Direction2DIn8.topLeft => topLeft,
-        Direction2DIn8.top => topCenter,
-        Direction2DIn8.topRight => topRight,
-        Direction2DIn8.left => centerLeft,
-        Direction2DIn8.right => centerRight,
-        Direction2DIn8.bottomLeft => bottomLeft,
-        Direction2DIn8.bottom => bottomCenter,
-        Direction2DIn8.bottomRight => bottomRight,
+  Offset offsetOf<T>(T value) => switch (value) {
+        Alignment() => switch (value) {
+            Alignment.topLeft => topLeft,
+            Alignment.topCenter => topCenter,
+            Alignment.topRight => topRight,
+            Alignment.centerLeft => centerLeft,
+            Alignment.center => center,
+            Alignment.centerRight => centerRight,
+            Alignment.bottomLeft => bottomLeft,
+            Alignment.bottomCenter => bottomCenter,
+            Alignment.bottomRight => bottomRight,
+            _ => throw UnimplementedError(),
+          },
+        Direction2DIn8() => switch (value) {
+            Direction2DIn8.topLeft => topLeft,
+            Direction2DIn8.top => topCenter,
+            Direction2DIn8.topRight => topRight,
+            Direction2DIn8.left => centerLeft,
+            Direction2DIn8.right => centerRight,
+            Direction2DIn8.bottomLeft => bottomLeft,
+            Direction2DIn8.bottom => bottomCenter,
+            Direction2DIn8.bottomRight => bottomRight,
+          },
+        _ => throw UnimplementedError(),
       };
 
   Rect expandToIncludeDirection({
     required Direction2DIn8 direction,
     required double width,
     required double length,
-  }) {
-    final start = offsetFromDirection(direction);
-    return expandToInclude(
-      switch (direction) {
-        Direction2DIn8.top => Rect.fromPoints(
-            start + Offset(width / 2, 0),
-            start + Offset(-width / 2, -length),
-          ),
-        Direction2DIn8.bottom => Rect.fromPoints(
-            start + Offset(width / 2, 0),
-            start + Offset(-width / 2, length),
-          ),
-        Direction2DIn8.left => Rect.fromPoints(
-            start + Offset(0, width / 2),
-            start + Offset(-length, -width / 2),
-          ),
-        Direction2DIn8.right => Rect.fromPoints(
-            start + Offset(0, width / 2),
-            start + Offset(length, -width / 2),
-          ),
-        Direction2DIn8.topLeft => Rect.fromPoints(
-            start,
-            start + Offset(-length, -length) * DoubleExtension.sqrt1_2,
-          ),
-        Direction2DIn8.topRight => Rect.fromPoints(
-            start,
-            start + Offset(length, -length) * DoubleExtension.sqrt1_2,
-          ),
-        Direction2DIn8.bottomLeft => Rect.fromPoints(
-            start,
-            start + Offset(-length, length) * DoubleExtension.sqrt1_2,
-          ),
-        Direction2DIn8.bottomRight => Rect.fromPoints(
-            start,
-            start + Offset(length, length) * DoubleExtension.sqrt1_2,
-          ),
-      },
-    );
-  }
-
+  }) =>
+      expandToInclude(
+        direction.extruding(offsetOf(direction))(width, length),
+      );
 }
 
 extension AlignmentExtension on Alignment {
@@ -442,7 +411,6 @@ extension AlignmentExtension on Alignment {
         ? (index) => origin + step * index
         : (index) => origin - step * index;
   }
-
 }
 
 extension ColorExtension on Color {
@@ -678,7 +646,7 @@ extension PositionedExtension on Positioned {
 }
 
 ///
-/// [theme], [textTheme], [colorScheme], [appBarTheme]
+/// [theme], [themeText], .... , [colorScheme]
 /// [mediaSize], [mediaViewInsets]
 /// [isKeyboardShowing]
 ///
@@ -694,21 +662,128 @@ extension BuildContextExtension on BuildContext {
   // AppLocalizations get loc => AppLocalizations.of(this)!;
 
   ///
+  ///
+  ///
+  ///
   /// theme
   ///
-
-  TargetPlatform get platform => Theme.of(this).platform;
+  ///
+  ///
+  ///
 
   ThemeData get theme => Theme.of(this);
 
-  TextTheme get textTheme => theme.textTheme;
+  TargetPlatform get platform => theme.platform;
+
+  IconThemeData get themeIcon => theme.iconTheme;
+
+  TextTheme get themeText => theme.textTheme;
+
+  AppBarTheme get themeAppBar => theme.appBarTheme;
+
+  BadgeThemeData get themeBadge => theme.badgeTheme;
+
+  MaterialBannerThemeData get themeBanner => theme.bannerTheme;
+
+  BottomAppBarTheme get themeBottomAppBar => theme.bottomAppBarTheme;
+
+  BottomNavigationBarThemeData get themeBottomNavigationBar =>
+      theme.bottomNavigationBarTheme;
+
+  BottomSheetThemeData get themeBottomSheet => theme.bottomSheetTheme;
+
+  ButtonBarThemeData get themeButtonBar => theme.buttonBarTheme;
+
+  ButtonThemeData get themeButton => theme.buttonTheme;
+
+  CardTheme get themeCard => theme.cardTheme;
+
+  CheckboxThemeData get themeCheckbox => theme.checkboxTheme;
+
+  ChipThemeData get themeChip => theme.chipTheme;
+
+  DataTableThemeData get themeDataTable => theme.dataTableTheme;
+
+  DatePickerThemeData get themeDatePicker => theme.datePickerTheme;
+
+  DialogTheme get themeDialog => theme.dialogTheme;
+
+  DividerThemeData get themeDivider => theme.dividerTheme;
+
+  DrawerThemeData get themeDrawer => theme.drawerTheme;
+
+  DropdownMenuThemeData get themeDropdownMenu => theme.dropdownMenuTheme;
+
+  ElevatedButtonThemeData get themeElevatedButton => theme.elevatedButtonTheme;
+
+  ExpansionTileThemeData get themeExpansionTile => theme.expansionTileTheme;
+
+  FilledButtonThemeData get themeFilledButton => theme.filledButtonTheme;
+
+  FloatingActionButtonThemeData get themeFloatingActionButton =>
+      theme.floatingActionButtonTheme;
+
+  IconButtonThemeData get themeIconButton => theme.iconButtonTheme;
+
+  ListTileThemeData get themeListTile => theme.listTileTheme;
+
+  MenuBarThemeData get themeMenuBar => theme.menuBarTheme;
+
+  MenuButtonThemeData get themeMenuButton => theme.menuButtonTheme;
+
+  MenuThemeData get themeMenu => theme.menuTheme;
+
+  NavigationBarThemeData get themeNavigationBar => theme.navigationBarTheme;
+
+  NavigationDrawerThemeData get themeNavigationDrawer =>
+      theme.navigationDrawerTheme;
+
+  NavigationRailThemeData get themeNavigationRail => theme.navigationRailTheme;
+
+  OutlinedButtonThemeData get themeOutlinedButton => theme.outlinedButtonTheme;
+
+  PopupMenuThemeData get themePopupMenu => theme.popupMenuTheme;
+
+  ProgressIndicatorThemeData get themeProgressIndicator =>
+      theme.progressIndicatorTheme;
+
+  RadioThemeData get themeRadio => theme.radioTheme;
+
+  SearchBarThemeData get themeSearchBar => theme.searchBarTheme;
+
+  SearchViewThemeData get themeSearchView => theme.searchViewTheme;
+
+  SegmentedButtonThemeData get themeSegmentedButton =>
+      theme.segmentedButtonTheme;
+
+  SliderThemeData get themeSlider => theme.sliderTheme;
+
+  SnackBarThemeData get themeSnackBar => theme.snackBarTheme;
+
+  SwitchThemeData get themeSwitch => theme.switchTheme;
+
+  TabBarTheme get themeTabBar => theme.tabBarTheme;
+
+  TextButtonThemeData get themeTextButton => theme.textButtonTheme;
+
+  TextSelectionThemeData get themeTextSelection => theme.textSelectionTheme;
+
+  TimePickerThemeData get themeTimePicker => theme.timePickerTheme;
+
+  ToggleButtonsThemeData get themeToggleButtons => theme.toggleButtonsTheme;
+
+  TooltipThemeData get themeTooltip => theme.tooltipTheme;
 
   ColorScheme get colorScheme => theme.colorScheme;
 
-  AppBarTheme get appBarTheme => theme.appBarTheme;
-
+  ///
+  ///
+  ///
   ///
   /// material
+  ///
+  ///
+  ///
   ///
 
   Size get mediaSize => MediaQuery.sizeOf(this);
@@ -933,7 +1008,6 @@ extension BuildContextExtension on BuildContext {
 extension VoidCallbackExtension on VoidCallback {
   Future<void> delayed(Duration duration) => Future.delayed(duration, this);
 }
-
 
 extension RandomExtension on math.Random {
   static bool get binary => math.Random().nextBool();

@@ -2,7 +2,7 @@
 ///
 /// this file contains:
 ///
-/// [_PathOperationExtension]
+/// [PathOperationExtension]
 ///
 ///
 ///
@@ -37,12 +37,12 @@
 ///
 part of dastore;
 
-extension _PathOperationExtension on PathOperation {
-  SizingPath _combine(SizingPath previous, SizingPath next) =>
+extension PathOperationExtension on PathOperation {
+  SizingPath combine(SizingPath previous, SizingPath next) =>
           (size) => Path.combine(this, previous(size), next(size));
 
-  SizingPath _combineAll(Iterable<SizingPath> iterable) =>
-      iterable.reduce((previous, next) => _combine(previous, next));
+  SizingPath combineAll(Iterable<SizingPath> iterable) =>
+      iterable.reduce((previous, next) => combine(previous, next));
 }
 
 ///
@@ -67,19 +67,19 @@ extension _PathOperationExtension on PathOperation {
 ///
 extension FSizingPath on SizingPath {
   SizingPath difference(SizingPath another) =>
-      PathOperation.difference._combine(this, another);
+      PathOperation.difference.combine(this, another);
 
   SizingPath intersect(SizingPath another) =>
-      PathOperation.intersect._combine(this, another);
+      PathOperation.intersect.combine(this, another);
 
   SizingPath union(SizingPath another) =>
-      PathOperation.union._combine(this, another);
+      PathOperation.union.combine(this, another);
 
   SizingPath xor(SizingPath another) =>
-      PathOperation.xor._combine(this, another);
+      PathOperation.xor.combine(this, another);
 
   SizingPath reverseDifference(SizingPath another) =>
-      PathOperation.reverseDifference._combine(this, another);
+      PathOperation.reverseDifference.combine(this, another);
 
   static SizingPath of(Path value) => (_) => value;
 
@@ -87,7 +87,7 @@ extension FSizingPath on SizingPath {
       PathOperation operation,
       Iterable<SizingPath> iterable,
       ) =>
-      operation._combineAll(iterable);
+      operation.combineAll(iterable);
 
   ///
   ///

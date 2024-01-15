@@ -22,8 +22,7 @@
 ///
 /// [TextFormFieldValidator]
 ///
-///
-/// [FTextFormFieldValidator]
+/// [DirectionExtruding]
 ///
 ///
 ///
@@ -93,4 +92,6 @@ typedef TextFormFieldValidator = FormFieldValidator<String> Function(
   String failedMessage,
 );
 
+
+typedef DirectionExtruding = Rect Function(double width, double height);
 
