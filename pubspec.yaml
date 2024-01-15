@@ -1,6 +1,6 @@
 name: dastore
 description: general foundation for flutter development
-version: 0.0.1
+version: 0.0.2
 repository: https://github.com/nomagicisreal/dastore
 
 environment:
