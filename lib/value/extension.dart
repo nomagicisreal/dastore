@@ -3,8 +3,7 @@
 /// this file contains:
 ///
 /// [NumExtension], [DoubleExtension], [IntExtension]
-/// [StringExtension], [MatchExtension
-/// ]
+/// [StringExtension], [MatchExtension]
 /// [SizeExtension], [OffsetExtension], [RectExtension]
 /// [AlignmentExtension]
 ///
@@ -22,7 +21,7 @@
 /// [BuildContextExtension]
 ///
 /// [VoidCallbackExtension]
-/// [RandomExtension]
+///
 ///
 ///
 ///
@@ -414,8 +413,6 @@ extension AlignmentExtension on Alignment {
 }
 
 extension ColorExtension on Color {
-  static Color get randomPrimary => Colors.primaries[math.Random().nextInt(18)];
-
   Color plusARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
         this.alpha + alpha,
         this.red + red,
@@ -1009,95 +1006,3 @@ extension VoidCallbackExtension on VoidCallback {
   Future<void> delayed(Duration duration) => Future.delayed(duration, this);
 }
 
-extension RandomExtension on math.Random {
-  static bool get binary => math.Random().nextBool();
-
-  static int intOf(int max) => math.Random().nextInt(max);
-
-  static int get int2 => math.Random().nextInt(2);
-
-  static int get int3 => math.Random().nextInt(3);
-
-  static int get int4 => math.Random().nextInt(4);
-
-  static int get int5 => math.Random().nextInt(5);
-
-  static int get int6 => math.Random().nextInt(6);
-
-  static int get int7 => math.Random().nextInt(7);
-
-  static int get int8 => math.Random().nextInt(8);
-
-  static int get int9 => math.Random().nextInt(9);
-
-  static int get int10 => math.Random().nextInt(10);
-
-  static int get int20 => math.Random().nextInt(20);
-
-  static int get int30 => math.Random().nextInt(30);
-
-  static int get int40 => math.Random().nextInt(40);
-
-  static int get int50 => math.Random().nextInt(50);
-
-  static int get int60 => math.Random().nextInt(60);
-
-  static int get int70 => math.Random().nextInt(70);
-
-  static int get int80 => math.Random().nextInt(80);
-
-  static int get int90 => math.Random().nextInt(90);
-
-  static int get int100 => math.Random().nextInt(100);
-
-  static double get double02 => math.Random().nextInt(2) * 0.1;
-
-  static double get double03 => math.Random().nextInt(3) * 0.1;
-
-  static double get double04 => math.Random().nextInt(4) * 0.1;
-
-  static double get double05 => math.Random().nextInt(5) * 0.1;
-
-  static double get double06 => math.Random().nextInt(6) * 0.1;
-
-  static double get double07 => math.Random().nextInt(7) * 0.1;
-
-  static double get double08 => math.Random().nextInt(8) * 0.1;
-
-  static double get double09 => math.Random().nextInt(9) * 0.1;
-
-  static double get double002 => math.Random().nextInt(2) * 0.01;
-
-  static double get double003 => math.Random().nextInt(3) * 0.01;
-
-  static double get double004 => math.Random().nextInt(4) * 0.01;
-
-  static double get double005 => math.Random().nextInt(5) * 0.01;
-
-  static double get double006 => math.Random().nextInt(6) * 0.01;
-
-  static double get double007 => math.Random().nextInt(7) * 0.01;
-
-  static double get double008 => math.Random().nextInt(8) * 0.01;
-
-  static double get double009 => math.Random().nextInt(9) * 0.01;
-
-  ///
-  /// material
-  ///
-  static final List<FloatingActionButtonLocation> _fabLocations = [
-    FloatingActionButtonLocation.startTop,
-    FloatingActionButtonLocation.startDocked,
-    FloatingActionButtonLocation.startFloat,
-    FloatingActionButtonLocation.centerTop,
-    FloatingActionButtonLocation.centerDocked,
-    FloatingActionButtonLocation.centerFloat,
-    FloatingActionButtonLocation.endTop,
-    FloatingActionButtonLocation.endDocked,
-    FloatingActionButtonLocation.endFloat,
-    FloatingActionButtonLocation.endContained,
-  ];
-
-  static FloatingActionButtonLocation get fabLocation =>
-      _fabLocations[math.Random().nextInt(10)];
-}

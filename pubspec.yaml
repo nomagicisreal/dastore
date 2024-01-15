@@ -1,6 +1,6 @@
 name: dastore
-description: general foundation for flutter development
-version: 0.0.3
+description: general constant, value, function for flutter development
+version: 0.0.4
 repository: https://github.com/nomagicisreal/dastore
 
 environment:

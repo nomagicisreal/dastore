@@ -5,8 +5,7 @@
 ///
 ///
 ///
-/// [CenterSizedBox], [CenterSizedBoxColored]
-/// [SizedBoxCenter]
+/// [CenterSizedBox], [SizedBoxCenter]
 ///
 ///
 ///
@@ -111,49 +110,6 @@ class CenterSizedBox extends StatelessWidget {
       widthFactor: widthFactor,
       heightFactor: heightFactor,
       child: SizedBox(width: width, height: height, child: child),
-    );
-  }
-}
-
-class CenterSizedBoxColored extends StatelessWidget {
-  const CenterSizedBoxColored({
-    super.key,
-    this.width,
-    this.height,
-    this.widthFactor,
-    this.heightFactor,
-    this.child,
-    required this.color,
-  });
-
-  CenterSizedBoxColored.fromSize({
-    super.key,
-    this.widthFactor,
-    this.heightFactor,
-    this.child,
-    required this.color,
-    required Size size,
-  })  : width = size.width,
-        height = size.height;
-
-  final double? width;
-  final double? height;
-  final double? widthFactor;
-  final double? heightFactor;
-  final Color color;
-  final Widget? child;
-
-  @override
-  Widget build(BuildContext context) {
-    return CenterSizedBox(
-      width: width,
-      height: height,
-      widthFactor: widthFactor,
-      heightFactor: heightFactor,
-      child: ColoredBox(
-        color: color,
-        child: child,
-      ),
     );
   }
 }

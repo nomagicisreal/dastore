@@ -22,4 +22,10 @@ part 'value/widget.dart';
 // part 'algorithm/algorithm_tempt.dart';
 
 
+///
+///
+/// some static methods implementation should be directly used in production mode,
+/// instead of invoking these extension by passing arguments into function
+///
+///
 

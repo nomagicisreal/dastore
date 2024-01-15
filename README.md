@@ -1,5 +1,4 @@
-see [dastore - (Pub.dev)](https://pub.dev/packages/dastore)
-see [dastore - (Github)](https://github.com/nomagicisreal/dastore)
+see dastore in [Pub.dev](https://pub.dev/packages/dastore) and [Github](https://github.com/nomagicisreal/dastore)
 
 In this project,
 there are many extensions start with `K`, `V`, `W`, `F`.
