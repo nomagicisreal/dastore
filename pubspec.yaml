@@ -1,0 +1,19 @@
+name: dastore
+description: A sample command-line application.
+version: 0.0.1
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.2.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  vector_math: ^2.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  lints: ^2.1.0
+  test: ^1.24.0
