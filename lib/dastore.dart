@@ -7,7 +7,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math.dart' show Vector3;
 
-
 part 'util.dart';
 part 'algorithm/collection.dart';
 part 'concurrent/concurrent.dart';

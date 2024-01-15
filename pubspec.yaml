@@ -1,7 +1,7 @@
 name: dastore
-description: A sample command-line application.
+description: general foundation for flutter development
 version: 0.0.1
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/nomagicisreal/dastore
 
 environment:
   sdk: ^3.2.3
