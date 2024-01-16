@@ -14,14 +14,10 @@
 /// [WDivider]
 ///
 /// render object widget:
-/// [WSizedBox]
-/// [WColoredBox]
+/// [WSizedBox], [WColoredBox]
 ///
-/// function for widget creation
-/// [FClipPath], [FCustomPaint]
-///
+/// function for widget related elements:
 /// [FImageLoadingBuilder], [FImageErrorWidgetBuilder]
-///
 /// [FBoxShadow]
 /// [FBorderSide], [FBorderBox], [FBorderOutlined], [FBorderInput]
 /// [FDecorationBox], [FDecorationShape], [FDecorationInput]
@@ -35,7 +31,24 @@
 ///
 ///
 ///
+///
+///
+///
+///
 part of dastore;
+
+
+///
+///
+///
+///
+///
+/// stateful widget
+///
+///
+///
+///
+///
 
 extension WProgressIndicator on ProgressIndicator {
   static const circular = CircularProgressIndicator();
@@ -285,56 +298,7 @@ extension WColoredBox on ColoredBox {
 ///
 ///
 
-extension FClipPath on CustomPaint {
-  static ClipPath rectFromZeroToSize({
-    Clip clipBehavior = Clip.antiAlias,
-    required Size size,
-    required Widget child,
-  }) =>
-      ClipPath(
-        clipBehavior: clipBehavior,
-        clipper: Clipping.rectOf(Offset.zero & size),
-        child: child,
-      );
 
-  static ClipPath reClipNeverOf({
-    Clip clipBehavior = Clip.antiAlias,
-    required SizingPath pathFromSize,
-    required Widget child,
-  }) =>
-      ClipPath(
-        clipBehavior: clipBehavior,
-        clipper: Clipping.reclipNever(pathFromSize),
-        child: child,
-      );
-
-  static ClipPath decoratedPolygon(
-    Decoration decoration,
-    RRegularPolygon polygon, {
-    DecorationPosition position = DecorationPosition.background,
-    Widget? child,
-  }) =>
-      ClipPath(
-        clipper: Clipping.polygonCubicCornerFromSize(polygon),
-        child: DecoratedBox(
-          decoration: decoration,
-          position: position,
-          child: child,
-        ),
-      );
-}
-
-extension FCustomPaint on CustomPaint {
-  static CustomPaint polygonCanvasSizeToPaint(
-    RRegularPolygon polygon,
-    SizingPaintFromCanvas paintFromCanvasSize, {
-    Widget? child,
-  }) =>
-      CustomPaint(
-        painter: Painting.polygonCubicCorner(paintFromCanvasSize, polygon),
-        child: child,
-      );
-}
 
 extension FImageLoadingBuilder on ImageLoadingBuilder {
   static Widget style1(
@@ -424,12 +388,6 @@ extension FImageErrorWidgetBuilder on ImageErrorWidgetBuilder {
   static Widget errorStyle1(BuildContext c, Object o, StackTrace? s) =>
       const SizedBox(height: 200, width: 200, child: Icon(Icons.error));
 }
-
-///
-///
-///
-///
-///
 
 ///
 ///
