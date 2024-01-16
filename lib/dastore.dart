@@ -9,6 +9,7 @@ import 'package:vector_math/vector_math.dart' show Vector3;
 
 part 'util.dart';
 part 'algorithm/collection.dart';
+part 'algorithm/combination.dart';
 part 'concurrent/concurrent.dart';
 part 'element/mix.dart';
 part 'element/setup.dart';

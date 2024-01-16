@@ -2,9 +2,6 @@
 ///
 /// this file contains:
 ///
-/// [Clipping], [Painting]
-///
-///
 /// [Operator]
 ///
 ///
@@ -19,9 +16,7 @@
 /// [Coordinate]
 ///   * [_CoordinateBase]
 ///
-///
 /// [Vector3D]
-///
 ///
 /// [Curving]
 ///
@@ -42,128 +37,6 @@
 ///
 part of dastore;
 // ignore_for_file: constant_identifier_names
-
-///
-///
-/// [_shouldReClip]
-/// [sizingPath]
-///
-/// [Clipping.reclipWhenUpdate]
-/// [Clipping.reclipNever]
-///
-/// [Clipping.rectOf]
-/// [Clipping.rectFromZeroTo]
-/// [Clipping.rectFromZeroToOffset]
-/// [Clipping.polygonCubicCornerFromSize]
-///
-///
-///
-class Clipping extends CustomClipper<Path> {
-  final SizingPath sizingPath;
-  final Combiner<Clipping, bool> _shouldReClip;
-
-  @override
-  Path getClip(Size size) => sizingPath(size);
-
-  @override
-  bool shouldReclip(Clipping oldClipper) => _shouldReClip(oldClipper, this);
-
-  static bool _reclipWhenUpdate(Clipping oldC, Clipping c) => true;
-
-  static bool _reclipNever(Clipping oldC, Clipping c) => false;
-
-  const Clipping.reclipWhenUpdate(this.sizingPath)
-      : _shouldReClip = _reclipWhenUpdate;
-
-  const Clipping.reclipNever(this.sizingPath) : _shouldReClip = _reclipNever;
-
-  ///
-  ///
-  /// factories
-  ///
-  ///
-
-  factory Clipping.rectOf(Rect rect) =>
-      Clipping.reclipNever(FSizingPath.rect(rect));
-
-  factory Clipping.rectFromZeroTo(Size size) =>
-      Clipping.rectOf(Offset.zero & size);
-
-  factory Clipping.rectFromZeroToOffset(Offset corner) =>
-      Clipping.rectOf(Rect.fromPoints(Offset.zero, corner));
-
-  factory Clipping.polygonCubicCornerFromSize(RRegularPolygon polygon) =>
-      Clipping.reclipNever(
-        FSizingPath.polygonCubicFromSize(polygon.cubicPoints),
-      );
-}
-
-///
-/// [_shouldRePaint]
-/// [sizingPaintFromCanvas]
-/// [sizingPath]
-/// [paintingPath]
-///
-/// [draw]
-///
-/// [Painting.rePaintWhenUpdate]
-/// [Painting.rePaintNever]
-///
-///
-///
-///
-class Painting extends CustomPainter {
-  final Combiner<Painting, bool> _shouldRePaint;
-  final SizingPaintFromCanvas sizingPaintFromCanvas;
-  final SizingPath sizingPath;
-  final PaintingPath paintingPath;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = sizingPaintFromCanvas(canvas, size);
-    final path = sizingPath(size);
-    paintingPath(canvas, paint, path);
-  }
-
-  @override
-  bool shouldRepaint(Painting oldDelegate) => _shouldRePaint(oldDelegate, this);
-
-  ///
-  /// paint with path
-  ///
-  static void draw(Canvas canvas, Paint paint, Path path) =>
-      canvas.drawPath(path, paint);
-
-  static bool _rePaintWhenUpdate(Painting oldP, Painting p) => true;
-
-  static bool _rePaintNever(Painting oldP, Painting p) => false;
-
-  const Painting.rePaintWhenUpdate({
-    this.paintingPath = draw,
-    required this.sizingPath,
-    required this.sizingPaintFromCanvas,
-  }) : _shouldRePaint = _rePaintWhenUpdate;
-
-  const Painting.rePaintNever({
-    this.paintingPath = draw,
-    required this.sizingPaintFromCanvas,
-    required this.sizingPath,
-  }) : _shouldRePaint = _rePaintNever;
-
-  ///
-  ///
-  /// factories
-  ///
-  ///
-  factory Painting.polygonCubicCorner(
-    SizingPaintFromCanvas paintFromCanvasSize,
-    RRegularPolygon polygon,
-  ) =>
-      Painting.rePaintNever(
-        sizingPaintFromCanvas: paintFromCanvasSize,
-        sizingPath: FSizingPath.polygonCubic(polygon.cubicPoints),
-      );
-}
 
 enum Operator {
   plus,

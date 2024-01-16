@@ -1,6 +1,9 @@
 ///
 ///
 /// this file contains:
+/// util class:
+/// [Clipping], [Painting]
+///
 ///
 /// stateful widget:
 /// [WProgressIndicator]
@@ -14,14 +17,11 @@
 /// [WDivider]
 ///
 /// render object widget:
-/// [WSizedBox]
-/// [WColoredBox]
+/// [WSizedBox], [WColoredBox]
+/// [WPainting], [WClipping]
 ///
-/// function for widget creation
-/// [FClipPath], [FCustomPaint]
-///
+/// function for widget related elements:
 /// [FImageLoadingBuilder], [FImageErrorWidgetBuilder]
-///
 /// [FBoxShadow]
 /// [FBorderSide], [FBorderBox], [FBorderOutlined], [FBorderInput]
 /// [FDecorationBox], [FDecorationShape], [FDecorationInput]
@@ -36,6 +36,136 @@
 ///
 ///
 part of dastore;
+
+///
+///
+/// [_shouldReClip]
+/// [sizingPath]
+///
+/// [Clipping.reclipWhenUpdate]
+/// [Clipping.reclipNever]
+///
+/// [Clipping.rectOf]
+/// [Clipping.rectFromZeroTo]
+/// [Clipping.rectFromZeroToOffset]
+/// [Clipping.rRegularPolygon]
+///
+///
+class Clipping extends CustomClipper<Path> {
+  final SizingPath sizingPath;
+  final Combiner<Clipping, bool> _shouldReClip;
+
+  @override
+  Path getClip(Size size) => sizingPath(size);
+
+  @override
+  bool shouldReclip(Clipping oldClipper) => _shouldReClip(oldClipper, this);
+
+  static bool _reclipWhenUpdate(Clipping oldC, Clipping c) => true;
+
+  static bool _reclipNever(Clipping oldC, Clipping c) => false;
+
+  const Clipping.reclipWhenUpdate(this.sizingPath)
+      : _shouldReClip = _reclipWhenUpdate;
+
+  const Clipping.reclipNever(this.sizingPath) : _shouldReClip = _reclipNever;
+
+  ///
+  /// factories
+  ///
+  factory Clipping.rectOf(Rect rect) =>
+      Clipping.reclipNever(FSizingPath.rect(rect));
+
+  factory Clipping.rectFromZeroTo(Size size) =>
+      Clipping.rectOf(Offset.zero & size);
+
+  factory Clipping.rectFromZeroToOffset(Offset corner) =>
+      Clipping.rectOf(Rect.fromPoints(Offset.zero, corner));
+
+  factory Clipping.rRegularPolygon(
+      RRegularPolygon polygon, {
+        Companion<Iterable<Offset>, Size> adjust =
+            IterableOffsetExtension.adjustCenterCompanion,
+      }) =>
+      Clipping.reclipNever(
+        FSizingPath.polygonCubic(polygon.cubicPoints),
+      );
+}
+
+///
+/// [_shouldRePaint]
+/// [sizingPaintFromCanvas]
+/// [sizingPath]
+/// [paintingPath]
+///
+/// [draw]
+///
+/// [Painting.rePaintWhenUpdate]
+/// [Painting.rePaintNever]
+///
+///
+class Painting extends CustomPainter {
+  final Combiner<Painting, bool> _shouldRePaint;
+  final SizingPaintFromCanvas sizingPaintFromCanvas;
+  final SizingPath sizingPath;
+  final PaintingPath paintingPath;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = sizingPaintFromCanvas(canvas, size);
+    final path = sizingPath(size);
+    paintingPath(canvas, paint, path);
+  }
+
+  @override
+  bool shouldRepaint(Painting oldDelegate) => _shouldRePaint(oldDelegate, this);
+
+  ///
+  /// paint with path
+  ///
+  static void draw(Canvas canvas, Paint paint, Path path) =>
+      canvas.drawPath(path, paint);
+
+  static bool _rePaintWhenUpdate(Painting oldP, Painting p) => true;
+
+  static bool _rePaintNever(Painting oldP, Painting p) => false;
+
+  const Painting.rePaintWhenUpdate({
+    this.paintingPath = draw,
+    required this.sizingPath,
+    required this.sizingPaintFromCanvas,
+  }) : _shouldRePaint = _rePaintWhenUpdate;
+
+  const Painting.rePaintNever({
+    this.paintingPath = draw,
+    required this.sizingPaintFromCanvas,
+    required this.sizingPath,
+  }) : _shouldRePaint = _rePaintNever;
+
+  ///
+  /// factories
+  ///
+  factory Painting.rRegularPolygon(
+      SizingPaintFromCanvas paintFromCanvasSize,
+      RRegularPolygon polygon,
+      ) =>
+      Painting.rePaintNever(
+        sizingPaintFromCanvas: paintFromCanvasSize,
+        sizingPath: FSizingPath.polygonCubic(polygon.cubicPoints),
+      );
+}
+
+///
+///
+///
+///
+///
+/// stateful widget
+///
+///
+///
+///
+///
 
 extension WProgressIndicator on ProgressIndicator {
   static const circular = CircularProgressIndicator();
@@ -270,6 +400,84 @@ extension WColoredBox on ColoredBox {
   static const ColoredBox purple = ColoredBox(color: Colors.purple);
 }
 
+extension WPainting on CustomPaint {
+  static CustomPaint drawRRegularPolygon(
+      RRegularPolygon polygon,
+      SizingPaintFromCanvas draw, {
+        Widget? child,
+      }) =>
+      CustomPaint(
+        painter: Painting.rRegularPolygon(draw, polygon),
+        child: child,
+      );
+}
+
+///
+/// [rRectColored]
+///
+/// [pathReClipNever]
+/// [pathRectFromZeroToSize]
+/// [pathRRegularPolygonDecoratedBox]
+///
+extension WClipping on ClipPath {
+  static ClipRRect rRectColored({
+    required BorderRadius borderRadius,
+    required Color color,
+    CustomClipper<RRect>? clipper,
+    Clip clipBehavior = Clip.antiAlias,
+    Widget? child,
+  }) =>
+      ClipRRect(
+        clipper: clipper,
+        clipBehavior: clipBehavior,
+        borderRadius: borderRadius,
+        child: ColoredBox(
+          color: color,
+          child: child,
+        ),
+      );
+
+  ///
+  /// path with [Clipping]
+  ///
+  static ClipPath pathReClipNever({
+    Clip clipBehavior = Clip.antiAlias,
+    required SizingPath pathFromSize,
+    required Widget child,
+  }) =>
+      ClipPath(
+        clipBehavior: clipBehavior,
+        clipper: Clipping.reclipNever(pathFromSize),
+        child: child,
+      );
+
+  static ClipPath pathRectFromZeroToSize({
+    Clip clipBehavior = Clip.antiAlias,
+    required Size size,
+    required Widget child,
+  }) =>
+      ClipPath(
+        clipBehavior: clipBehavior,
+        clipper: Clipping.rectOf(Offset.zero & size),
+        child: child,
+      );
+
+  static ClipPath pathRRegularPolygonDecoratedBox(
+      Decoration decoration,
+      RRegularPolygon polygon, {
+        DecorationPosition position = DecorationPosition.background,
+        Widget? child,
+      }) =>
+      ClipPath(
+        clipper: Clipping.rRegularPolygon(polygon),
+        child: DecoratedBox(
+          decoration: decoration,
+          position: position,
+          child: child,
+        ),
+      );
+}
+
 ///
 ///
 ///
@@ -285,56 +493,7 @@ extension WColoredBox on ColoredBox {
 ///
 ///
 
-extension FClipPath on CustomPaint {
-  static ClipPath rectFromZeroToSize({
-    Clip clipBehavior = Clip.antiAlias,
-    required Size size,
-    required Widget child,
-  }) =>
-      ClipPath(
-        clipBehavior: clipBehavior,
-        clipper: Clipping.rectOf(Offset.zero & size),
-        child: child,
-      );
 
-  static ClipPath reClipNeverOf({
-    Clip clipBehavior = Clip.antiAlias,
-    required SizingPath pathFromSize,
-    required Widget child,
-  }) =>
-      ClipPath(
-        clipBehavior: clipBehavior,
-        clipper: Clipping.reclipNever(pathFromSize),
-        child: child,
-      );
-
-  static ClipPath decoratedPolygon(
-    Decoration decoration,
-    RRegularPolygon polygon, {
-    DecorationPosition position = DecorationPosition.background,
-    Widget? child,
-  }) =>
-      ClipPath(
-        clipper: Clipping.polygonCubicCornerFromSize(polygon),
-        child: DecoratedBox(
-          decoration: decoration,
-          position: position,
-          child: child,
-        ),
-      );
-}
-
-extension FCustomPaint on CustomPaint {
-  static CustomPaint polygonCanvasSizeToPaint(
-    RRegularPolygon polygon,
-    SizingPaintFromCanvas paintFromCanvasSize, {
-    Widget? child,
-  }) =>
-      CustomPaint(
-        painter: Painting.polygonCubicCorner(paintFromCanvasSize, polygon),
-        child: child,
-      );
-}
 
 extension FImageLoadingBuilder on ImageLoadingBuilder {
   static Widget style1(
@@ -424,12 +583,6 @@ extension FImageErrorWidgetBuilder on ImageErrorWidgetBuilder {
   static Widget errorStyle1(BuildContext c, Object o, StackTrace? s) =>
       const SizedBox(height: 200, width: 200, child: Icon(Icons.error));
 }
-
-///
-///
-///
-///
-///
 
 ///
 ///

@@ -38,11 +38,10 @@ const VoidCallback kVoidCallback = _voidCallback;
 void _voidCallback() {}
 
 double clampDoublePositive(double value) => clampDouble(
-  value,
-  0.0,
-  double.infinity,
-);
-
+      value,
+      0.0,
+      double.infinity,
+    );
 
 typedef Predicator<T> = bool Function(T a);
 typedef PredicatorTernary<T> = bool? Function(T value);
@@ -57,14 +56,13 @@ typedef Generator<T> = T Function(int index);
 typedef Supporter<T> = T Function(Supplier<int> indexing);
 typedef Translator<T, S> = S Function(T value);
 typedef Sequencer<R, S, I> = Translator<int, R> Function(
-    S previous,
-    S next,
-    I interval,
-    );
+  S previous,
+  S next,
+  I interval,
+);
 typedef Companion<T, S> = T Function(T host, S value);
 // typedef Conductor<T> = void Function(T a, T b);
 // typedef Reducer<T> = T Function(T v1, T v2);
-
 
 typedef Generator2D<T> = T Function(int i, int j);
 
@@ -81,17 +79,17 @@ typedef SizingPath = Path Function(Size size);
 typedef SizingPathWithRect = Path Function(Rect rect, Size size);
 typedef SizingPathWithRRect = Path Function(RRect rect, Size size);
 typedef SizingOffsetIterable = Iterable<Offset> Function(Size size);
+typedef SizingOffsetIterableIterable = Iterable<Iterable<Offset>> Function(
+  Size size,
+);
 typedef SizingOffsetList = List<Offset> Function(Size size);
 typedef SizingPaintFromCanvas = Paint Function(Canvas canvas, Size size);
 typedef PaintingPath = void Function(Canvas canvas, Paint paint, Path path);
 
 typedef RectBuilder = Rect Function(BuildContext context);
 
-
 typedef TextFormFieldValidator = FormFieldValidator<String> Function(
   String failedMessage,
 );
 
-
 typedef DirectionExtruding = Rect Function(double width, double height);
-

@@ -2,7 +2,6 @@
 ///
 /// this file contains:
 ///
-/// [NumExtension], [DoubleExtension], [IntExtension]
 /// [StringExtension], [MatchExtension]
 /// [SizeExtension], [OffsetExtension], [RectExtension]
 /// [AlignmentExtension]
@@ -34,6 +33,8 @@
 ///
 ///
 ///
+///
+///
 part of dastore;
 
 ///
@@ -52,84 +53,6 @@ part of dastore;
 ///
 ///
 
-extension NumExtension on num {
-  num get square => math.pow(this, 2);
-
-  bool isSmallerOrEqualTo(int value) => this == value || this < value;
-
-  bool isLessOneOrEqualTo(int value) => this == value || this + 1 == value;
-
-  bool isHigherOrEqualTo(int value) => this == value || this > value;
-
-  bool isHigherOneOrEqualTo(int value) => this == value || this == value + 1;
-}
-
-extension DoubleExtension on double {
-  static final double infinity2_31 = DoubleExtension.proximateInfinityOf(2.31);
-  static final double infinity3_2 = DoubleExtension.proximateInfinityOf(3.2);
-  static const double sqrt2 = math.sqrt2;
-  static const double sqrt3 = 1.7320508075688772;
-  static const double sqrt5 = 2.23606797749979;
-  static const double sqrt6 = 2.44948974278317;
-  static const double sqrt7 = 2.6457513110645907;
-  static const double sqrt8 = 2.8284271247461903;
-  static const double sqrt10 = 3.1622776601683795;
-  static const double sqrt1_2 = math.sqrt1_2;
-  static const double sqrt1_3 = 0.5773502691896257;
-  static const double sqrt1_5 = 0.4472135954999579;
-  static const double sqrt1_6 = 0.408248290463863;
-  static const double sqrt1_7 = 0.3779644730092272;
-  static const double sqrt1_8 = 0.3535533905932738;
-  static const double sqrt1_10 = 0.31622776601683794;
-
-  Radius get toCircularRadius => Radius.circular(this);
-
-  bool get isNearlyInt => (ceil() - this) <= 0.01;
-
-  ///
-  /// infinity usages
-  ///
-
-  static double proximateInfinityOf(double precision) =>
-      1.0 / math.pow(0.1, precision);
-
-  static double proximateNegativeInfinityOf(double precision) =>
-      -1.0 / math.pow(0.1, precision);
-
-  double filterInfinity(double precision) => switch (this) {
-        double.infinity => proximateInfinityOf(precision),
-        double.negativeInfinity => proximateNegativeInfinityOf(precision),
-        _ => this,
-      };
-}
-
-extension IntExtension on int {
-  int get accumulate {
-    assert(!isNegative && this != 0, 'invalid accumulate integer: $this');
-    int accelerator = 1;
-    for (var i = 1; i <= this; i++) {
-      accelerator += i;
-    }
-    return accelerator;
-  }
-
-  int get factorial {
-    assert(!isNegative && this != 0, 'invalid factorial integer: $this');
-    int accelerator = 1;
-    for (var i = 1; i <= this; i++) {
-      accelerator *= i;
-    }
-    return accelerator;
-  }
-
-  static List<int> accumulationTo(int end, {int start = 0}) {
-    final list = <int>[];
-    for (int i = start; i <= end; i++) {
-      list.add(i.accumulate);
-    }
-    return list;
-  }
-}
 
 ///
 ///
