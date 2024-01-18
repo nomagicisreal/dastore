@@ -5,20 +5,20 @@
 ///
 ///
 ///
-/// 
-/// 
-/// 
-/// 
-/// 
-/// 
-/// 
-/// 
-/// 
-/// 
-/// 
-/// 
-/// 
-/// 
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
+///
 part of dastore;
 
 class Combination {
@@ -35,7 +35,9 @@ class Combination {
     assert(n.rangeIn(0, m));
     if (n == m) return [IterableExtension.fill(n, 1)];
     if (n == 1) return [IterableExtension.fill(1, m)];
-    if (n == 2) return IterableExtension.generateFrom(m ~/ 2, (i) => [i, m - i]);
+    if (n == 2) {
+      return IterableExtension.generateFrom(m ~/ 2, (i) => [i, m - i]);
+    }
 
     final max = m - n + 1;
     final finalRow = [...IterableExtension.fill(n - 1, 1), max];
@@ -103,6 +105,26 @@ class Combination {
     ///
     ///
 
+    ///
+    /// use the logic of value distribution?
+    /// n = 8, p = 5, q = 3
+    /// 4 + 1 + 1 + 1 + 1
+    /// 3 + 2 + 1 + 1 + 1
+    /// 2 + 2 + 2 + 1 + 1
+    ///
+    /// n = 8, p = 2, q = 4
+    /// 7 + 1
+    /// 6 + 2
+    /// 5 + 3
+    /// 4 + 4
+    ///
+    /// 1. distribute remain on first element
+    /// 2. distribute remain-1 on first element and distribute 1 to trailing
+    ///   the firs element of trailing cannot larger than previous element
+    /// 3. distribute remain-2 on first element and distribute 2 to trailing
+    /// ...
+    /// 4. distribute 0 on first element (do nothing)
+
     throw UnimplementedError();
 
     // assert(list.length == m ~/ n);
@@ -116,4 +138,3 @@ class Combination {
       '$groups\n'
       ')';
 }
-

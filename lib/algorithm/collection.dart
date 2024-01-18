@@ -12,7 +12,7 @@
 ///
 /// [ListExtension]
 /// [ListOffsetExtension]
-/// [ListSetExtension]
+/// [ListListExtension], [ListSetExtension]
 ///
 ///
 /// [MapEntryExtension]
@@ -48,7 +48,7 @@ part of dastore;
 extension NumExtension on num {
   num get square => math.pow(this, 2);
 
-  bool rangeIn(int min, int max) => this >= min && this <= max;
+  bool rangeIn(num min, num max) => this >= min && this <= max;
 
   bool isLowerOrEqualTo(num value) => this == value || this < value;
 
@@ -110,9 +110,9 @@ extension DoubleExtension on double {
 }
 
 ///
-/// getters:
-/// [accumulate]
-/// [factorial]
+/// instance methods, getters:
+/// [digit], [digitFirst]
+/// [accumulate], [factorial]
 ///
 /// static methods:
 /// [accumulation]
@@ -122,6 +122,20 @@ extension DoubleExtension on double {
 ///
 ///
 extension IntExtension on int {
+  int digit({int carry = 10}) {
+    int value = abs();
+    int d = 0;
+    for (var i = 1; i < value; i *= carry, d++) {}
+    return d;
+  }
+
+  int digitFirst({int carry = 10}) {
+    final value = math.pow(carry, digit(carry: carry) - 1).toInt();
+    int i = 0;
+    for (; value * i < this; i ++) {}
+    return i - 1;
+  }
+
   int get accumulate {
     assert(!isNegative && this != 0, 'invalid accumulate integer: $this');
     int accelerator = 1;
@@ -220,8 +234,7 @@ extension IntExtension on int {
     final columnEndOf =
         isColumnEndAtK ? (i) => i + rowStart < k ? i + 1 : k : (i) => i + 1;
 
-
-    final array = ListListExtension.array2D<int>(
+    final array = ListExtension.generate2D<int>(
       rowEnd,
       k,
       (i, j) => j == 0 || j == i + rowStart
@@ -317,24 +330,25 @@ extension IntExtension on int {
 }
 
 ///
+/// static methods:
 /// [fill], [generateFrom]
 ///
-/// [hasElement], [notContains]
-/// [search], [everyWith]
-/// [mapToList]
-/// [reduceToNum], [reduceWithIndex]
+/// instance methods
+/// [hasElement]
+/// [notContains]
+/// [search]
+/// [iteratingWith]
+/// [everyCompare], [everyIsEqual], [anyNotEqual]
 /// [foldWithIndex], [foldWith]
-/// [expandWithIndex], [expandWith]
-/// [flat], [chunk]
+/// [reduceWithIndex], [reduceWith], [reduceTo], [reduceToNum], [reduceTogether]
+/// [expandWithIndex], [expandWith], [flat], [mapToList]
+/// [chunk]
 ///
 ///
 extension IterableExtension<I> on Iterable<I> {
-  static Iterable<I> fill<I>(int count, I value) =>
-      Iterable.generate(count, (_) => value);
-
   static Iterable<I> generateFrom<I>(
     int count, [
-    I Function(int i)? generator,
+    Generator<I>? generator,
     int start = 1,
   ]) {
     if (generator == null && I != int) throw UnimplementedError();
@@ -343,6 +357,9 @@ extension IterableExtension<I> on Iterable<I> {
       generator == null ? (i) => start + i as I : (i) => generator(start + i),
     );
   }
+
+  static Iterable<I> fill<I>(int count, I value) =>
+      Iterable.generate(count, FGenerator.fill(value));
 
   bool get hasElement => !isEmpty;
 
@@ -356,91 +373,154 @@ extension IterableExtension<I> on Iterable<I> {
     }
   }
 
-  bool everyWith(Iterable<I> another, Combiner<I, bool> predicator) {
+  void iteratingWith<S>(Iterable<S> another, Absorber<I, S> absorber) {
+    assert(length == another.length, 'length must be equal');
+    final iterator = this.iterator;
+    final iteratorAnother = another.iterator;
+    while (iterator.moveNext() && iteratorAnother.moveNext()) {
+      absorber(iterator.current, iteratorAnother.current);
+    }
+  }
+
+  bool everyCompare(
+    Iterable<I> another,
+    Comparator<I> comparator, {
+    int expect = 0,
+  }) {
     assert(length == another.length);
     final i1 = iterator;
     final i2 = another.iterator;
     while (i1.moveNext() && i2.moveNext()) {
-      if (!predicator(i1.current, i2.current)) {
+      if (comparator(i1.current, i2.current) != expect) {
         return false;
       }
     }
     return true;
   }
 
-  List<T> mapToList<T>(
-    T Function(I element) mapper, {
-    bool growable = false,
-  }) =>
-      map(mapper).toList(growable: growable);
+  bool everyIsEqual(Iterable<I> another) => everyCompare(
+        another,
+        (v1, v2) => v1 == v2 ? 0 : -1,
+        expect: 0,
+      );
 
-  I reduceWithIndex(
-    I Function(int i, I value, I element) combine, {
-    bool isPreviousIndex = true,
+  bool anyNotEqual(Iterable<I> another) => !everyIsEqual(another);
+
+  ///
+  /// fold
+  ///
+  S foldWithIndex<S>(
+    S initialValue,
+    GeneratorFolder<S, I, S> folder, {
+    int start = 0,
   }) {
-    int index = -1;
-    return reduce((value, element) => combine(++index, value, element));
+    int index = start - 1;
+    return fold(
+      initialValue,
+      (value, element) => folder(++index, value, element),
+    );
   }
 
-  N reduceToNum<N extends num>(
-    Translator<I, N> translate, {
-    Combiner<N, N>? combine,
+  S foldWith<S, P>(
+    Iterable<P> another,
+    S initialValue,
+    Fusionor<S, I, P, S> fusionor,
+  ) {
+    var value = initialValue;
+    iteratingWith(
+      another,
+      (e, eAnother) => value = fusionor(value, e, eAnother),
+    );
+    return value;
+  }
+
+  ///
+  /// reduce
+  ///
+  I reduceWithIndex(
+    GeneratorReducer<I> reducing, {
+    int start = 0,
   }) {
-    final combining = combine ?? math.max<N>;
+    int index = start - 1;
+    return reduce((value, element) => reducing(++index, value, element));
+  }
+
+  I reduceWith<S>(
+    Iterable<S> another,
+    Fusionor<S, I, I, I> fusionor, {
+    int start = 0,
+  }) {
+    assert(isNotEmpty && another.isNotEmpty);
+    final iterator = another.iterator;
+    return reduce((v1, v2) {
+      iterator.moveNext();
+      return fusionor(iterator.current, v1, v2);
+    });
+  }
+
+  S reduceTo<S>(
+    Reducer<S> reducer,
+    Translator<I, S> translator,
+  ) {
+    assert(isNotEmpty);
     final iterator = this.iterator..moveNext();
-    N val = translate(iterator.current);
+    S val = translator(iterator.current);
     while (iterator.moveNext()) {
-      val = combining(translate(iterator.current), val);
+      val = reducer(val, translator(iterator.current));
     }
     return val;
   }
 
-  T foldWithIndex<T>(
-    T initialValue,
-    T Function(T current, I element, int i) combine,
+  N reduceToNum<N extends num>(
+    Translator<I, N> translator, {
+    Reducer<N>? reducer,
+  }) =>
+      reduceTo(reducer ?? math.max<N>, translator);
+
+  S reduceTogether<S>(
+    Iterable<S> another,
+    Fusionor<S, S, S, S> reducer,
+    Translator<I, S> translator,
   ) {
-    int index = -1;
-    return fold(
-      initialValue,
-      (previousValue, element) => combine(previousValue, element, ++index),
+    assert(another.isNotEmpty);
+    final iterator = another.iterator;
+    return reduceTo(
+      (v1, v2) {
+        iterator.moveNext();
+        return reducer(iterator.current, v1, v2);
+      },
+      translator,
     );
   }
 
-  S foldWith<S>(
-    S initialValue,
-    List<I> another,
-    S Function(S previous, I v1, I v2) combine,
-  ) {
-    assert(length == another.length, 'length must be equal');
-    return foldWithIndex(
-      initialValue,
-      (previous, value, i) => combine(previous, value, another[i]),
-    );
-  }
-
-  Iterable<S> expandWithIndex<S>(
-    Iterable<S> Function(I element, int index) toElement,
-  ) {
+  ///
+  /// expand
+  ///
+  Iterable<S> expandWithIndex<S>(Mixer<I, int, Iterable<S>> mix) {
     int index = 0;
-    return expand((element) => toElement(element, index++));
+    return expand((element) => mix(element, index++));
   }
 
-  Iterable<S> expandWith<S>(
-    List<I> another,
-    Iterable<S> Function(I e1, I e2) toElement,
-  ) {
+  Iterable<S> expandWith<S, Q>(List<Q> another, Mixer<I, Q, Iterable<S>> mix) {
     int index = 0;
-    return expand((element) => toElement(element, another[index++]));
+    return expand((element) => mix(element, another[index++]));
   }
 
-  Iterable<T> flat<T>({bool isNested = false}) => fold<List<T>>(
+  Iterable<S> flat<S>() => fold<List<S>>(
         [],
         (list, element) => switch (element) {
-          T() => list..add(element),
-          Iterable<T>() => list..addAll(element),
-          _ => throw UnimplementedError(),
+          S() => list..add(element),
+          Iterable<S>() => list..addAll(element),
+          Iterable<Iterable<dynamic>>() => list..addAll(element.flat()),
+          _ => throw UnimplementedError('$element is not iterable or $S'),
         },
       );
+
+  List<T> mapToList<T>(
+    Translator<I, T> translator, {
+    bool growable = false,
+  }) =>
+      map(translator).toList(growable: growable);
 
   ///
   /// list = [2, 3, 4, 6, 10, 3, 9];
@@ -495,14 +575,56 @@ extension IterableTimerExtension on Iterable<Timer> {
   }
 }
 
-extension IterableIterableExtension<T> on Iterable<Iterable<T>> {
+///
+/// [lengths]
+/// [toStringPadLeft], [mapToStringJoin]
+/// [everyLengthIsEqual], [isSizeEqual]
+/// [foldWith2D]
+///
+extension IterableIterableExtension<I> on Iterable<Iterable<I>> {
   int get lengths => fold(0, (value, element) => value + element.length);
 
+  String toStringPadLeft(int space) => mapToStringJoin(
+        (row) => row.map((e) => e.toString().padLeft(space)).toString(),
+      );
+
   String mapToStringJoin([
-    String Function(Iterable<T> e)? mapper,
+    Translator<Iterable<I>, String>? mapper,
     String separator = "\n",
   ]) =>
       map(mapper ?? (e) => e.toString()).join(separator);
+
+  bool everyLengthIsEqual<S>(Iterable<Iterable<S>> another) {
+    assert(length == another.length, 'length must be equal');
+    final i1 = iterator;
+    final i2 = another.iterator;
+    while (i1.moveNext() && i2.moveNext()) {
+      if (i1.current.length != i2.current.length) return false;
+    }
+    return true;
+  }
+
+  bool isSizeEqual(Iterable<Iterable<I>> another) =>
+      length == another.length &&
+      everyCompare(
+        another,
+        (v1, v2) => v1.length == v2.length ? 0 : -1,
+        expect: 0,
+      );
+
+  S foldWith2D<S, P>(
+    Iterable<Iterable<P>> another,
+    S initialValue,
+    Fusionor<S, I, P, S> fusionor,
+  ) {
+    assert(everyLengthIsEqual(another));
+    var value = initialValue;
+    iteratingWith(
+      another,
+      (e, eAnother) => value = e.foldWith(eAnother, value, fusionor),
+    );
+    return value;
+  }
 }
 
 extension IterableSetExtension<I> on Iterable<Set<I>> {
@@ -511,18 +633,19 @@ extension IterableSetExtension<I> on Iterable<Set<I>> {
 
 ///
 ///
+/// static methods:
+/// [generateFrom]
+/// [generate2D], [generate2DSquare]
+/// [fill2D], [fill2DSquare]
+/// [linking]
+///
 /// instance methods:
 /// [swap]
-///
-/// [add2]
-/// [addIfNotNull]
+/// [add2], [addIfNotNull]
 /// [addFirstAndRemoveFirst], [addFirstAndRemoveFirstAndGet]
-///
 /// [getOrDefault],
-///
 /// [update], [updateWithMapper]
 /// [updateAll], [updateAllWithMapper]
-///
 /// [removeFirst], [removeWhereAndGet]
 ///
 /// [rearrangeAs]
@@ -530,11 +653,71 @@ extension IterableSetExtension<I> on Iterable<Set<I>> {
 /// [differenceWith], [differenceIndexWith]
 /// [combine]
 ///
-/// static methods:
-/// [linking]
-///
 ///
 extension ListExtension<T> on List<T> {
+  ///
+  /// static methods
+  ///
+  static List<T> generateFrom<T>(
+    int length, {
+    int start = 1,
+    bool growable = true,
+    required Generator<T> generator,
+  }) =>
+      List.generate(
+        length,
+        (index) => generator(index + start),
+        growable: growable,
+      );
+
+  static List<List<T>> generate2D<T>(
+    int rowCount,
+    int columnCount,
+    Generator2D<T> generator,
+  ) =>
+      List.generate(
+        rowCount,
+        (i) => List.generate(columnCount, (j) => generator(i, j)),
+      );
+
+  static List<List<T>> generate2DSquare<T>(int d, Generator2D<T> generator) =>
+      generate2D(d, d, generator);
+
+  static List<List<T>> fill2D<T>(int rowCount, int columnCount, T value) =>
+      generate2D(rowCount, columnCount, (i, j) => value);
+
+  static List<List<T>> fill2DSquare<T>(int size, T value) =>
+      fill2D(size, size, value);
+
+  static List<R> linking<R, S, I>({
+    required int totalStep,
+    required Generator<S> step,
+    required Generator<I> interval,
+    required Sequencer<R, S, I> sequencer,
+  }) {
+    final steps = List.generate(totalStep, step);
+    final lengthIntervals = totalStep - 1;
+    final intervals = List.generate(lengthIntervals, interval);
+
+    final result = <R>[];
+
+    S previous = steps.first;
+    for (var i = 0; i < lengthIntervals; i++) {
+      final next = steps[i + 1];
+      result.add(sequencer(previous, next, intervals[i])(i));
+      previous = next;
+    }
+    return result;
+  }
+
+  ///
+  ///
+  ///
+  /// instance methods
+  ///
+  ///
+  ///
+
   void swap(int indexA, int indexB) {
     final temp = this[indexA];
     this[indexA] = this[indexB];
@@ -694,27 +877,6 @@ extension ListExtension<T> on List<T> {
       yield MapEntry(this[i], values[i]);
     }
   }
-
-  static List<R> linking<R, S, I>({
-    required int totalStep,
-    required Generator<S> step,
-    required Generator<I> interval,
-    required Sequencer<R, S, I> sequencer,
-  }) {
-    final steps = List.generate(totalStep, step);
-    final lengthIntervals = totalStep - 1;
-    final intervals = List.generate(lengthIntervals, interval);
-
-    final result = <R>[];
-
-    S previous = steps.first;
-    for (var i = 0; i < lengthIntervals; i++) {
-      final next = steps[i + 1];
-      result.add(sequencer(previous, next, intervals[i])(i));
-      previous = next;
-    }
-    return result;
-  }
 }
 
 extension ListOffsetExtension on List<Offset> {
@@ -742,36 +904,12 @@ extension ListOffsetExtension on List<Offset> {
 }
 
 extension ListListExtension<T> on List<List<T>> {
-  int get firstLength => first.length;
+  int get lengthFirst => first.length;
 
   bool get isArray2D {
-    final columnCount = this.firstLength;
+    final columnCount = this.lengthFirst;
     return every((element) => element.length == columnCount);
   }
-
-  static List<List<T>> array2D<T>(
-    int rowCount,
-    int columnCount,
-    Generator2D<T> generator,
-  ) =>
-      List.generate(
-        rowCount,
-        (i) => List.generate(columnCount, (j) => generator(i, j)),
-      );
-
-  static List<List<T>> array2DSquare<T>(
-    int size,
-    Generator2D<T> generator,
-  ) =>
-      array2D(size, size, generator);
-
-  String toStringPadLeft(int space) => mapToStringJoin(
-        (row) => row.map((e) => e.toString().padLeft(space)).toString(),
-      );
-
-  bool isSizeEqual(List<List<T>> another) =>
-      length == another.length &&
-      everyWith(another, (v1, v2) => v1.length == v2.length);
 }
 
 extension ListSetExtension<I> on List<Set<I>> {
@@ -826,9 +964,8 @@ extension MapEntryIterableExtension<K, V> on Iterable<MapEntry<K, V>> {
 /// [containsKeys]
 /// [updateAll]
 /// [join]
-/// [fold], [foldWithIndex]
-/// [foldKeys], [foldValues]
-/// [reduceKeys], [reduceValues]
+/// [fold], [foldWithIndex], [foldKeys], [foldValues]
+/// [reduceKeys], [reduceValues], [reduceTo], [reduceToNum]
 ///
 ///
 extension MapExtension<K, V> on Map<K, V> {
@@ -843,7 +980,7 @@ extension MapExtension<K, V> on Map<K, V> {
     return true;
   }
 
-  void updateAll(Iterable<K>? keys, V Function(V value) value) {
+  void updateAll(Iterable<K>? keys, Mapper<V> value) {
     if (keys != null) {
       for (var k in keys) {
         update(k, value);
@@ -856,7 +993,7 @@ extension MapExtension<K, V> on Map<K, V> {
 
   T fold<T>(
     T initialValue,
-    T Function(T current, MapEntry<K, V> entry) foldMap,
+    Companion<T, MapEntry<K, V>> foldMap,
   ) =>
       entries.fold<T>(
         initialValue,
@@ -865,23 +1002,31 @@ extension MapExtension<K, V> on Map<K, V> {
 
   T foldWithIndex<T>(
     T initialValue,
-    T Function(T current, MapEntry<K, V> entry, int entryIndex) foldMap,
+    Fusionor<T, MapEntry<K, V>, int, T> fusionor,
   ) {
     int index = -1;
-
     return entries.fold<T>(
       initialValue,
-      (previousValue, element) => foldMap(previousValue, element, ++index),
+      (previousValue, element) => fusionor(previousValue, element, ++index),
     );
   }
 
-  S foldKeys<S>(S initialValue, S Function(S previous, K key) combine) =>
-      keys.fold(initialValue, combine);
+  S foldKeys<S>(S initialValue, Companion<S, K> companion) =>
+      keys.fold(initialValue, companion);
 
-  S foldValues<S>(S initialValue, S Function(S previous, V value) combine) =>
-      values.fold(initialValue, combine);
+  S foldValues<S>(S initialValue, Companion<S, V> companion) =>
+      values.fold(initialValue, companion);
 
-  K reduceKeys(Combiner<K, K> combine) => keys.reduce(combine);
+  K reduceKeys(Reducer<K> reducing) => keys.reduce(reducing);
 
-  V reduceValues(Combiner<V, V> combine) => values.reduce(combine);
+  V reduceValues(Reducer<V> reducing) => values.reduce(reducing);
+
+  S reduceTo<S>(Translator<MapEntry<K, V>, S> translator, Reducer<S> reducer) =>
+      entries.reduceTo(reducer, translator);
+
+  N reduceToNum<N extends num>(
+    Translator<MapEntry<K, V>, N> translator, {
+    Reducer<N>? reducer,
+  }) =>
+      entries.reduceToNum(translator, reducer: reducer);
 }

@@ -7,7 +7,7 @@
 ///
 /// [FPredicator], [FPredicatorNum], [FPredicatorCombiner], [FPredicatorTernaryCombiner]
 /// [FMapper], [FMapperDouble], [FMapperBoxConstraints]
-/// [FGenerator], [FGeneratorRadius]
+/// [FGenerator], [FGeneratorRadius], [FGeneratorOffset]
 /// [FTranslator]
 ///
 ///
@@ -37,9 +37,6 @@
 ///
 part of dastore;
 
-
-
-
 extension FRadian on double {
   static double modulus1Round(double radian) => radian % KRadian.angle_360;
 
@@ -48,12 +45,12 @@ extension FRadian on double {
   static double radianOf(double angle) => angle * KRadian.angle_1;
 
   static double complementaryOf(double radian) {
-    assert(radian >= 0 && radian <= KRadian.angle_90);
+    assert(radian.rangeIn(0, KRadian.angle_90));
     return radianOf(90 - angleOf(radian));
   }
 
   static double supplementaryOf(double radian) {
-    assert(radian >= 0 && radian <= KRadian.angle_180);
+    assert(radian.rangeIn(0, KRadian.angle_180));
     return radianOf(180 - angleOf(radian));
   }
 
@@ -84,17 +81,17 @@ extension FRadian on double {
       ifOverAngle90_90N(modulus1Round(radian));
 
   static bool ifOnTop(
-      double radian, {
-        bool isInMathDiscussion = false,
-      }) {
+    double radian, {
+    bool isInMathDiscussion = false,
+  }) {
     final r = modulus1Round(radian);
     return isInMathDiscussion ? ifWithinAngle0_180(r) : ifWithinAngle0_180N(r);
   }
 
   static bool ifOnBottom(
-      double radian, {
-        bool isInMathDiscussion = false,
-      }) {
+    double radian, {
+    bool isInMathDiscussion = false,
+  }) {
     final r = modulus1Round(radian);
     return isInMathDiscussion ? ifWithinAngle0_180N(r) : ifWithinAngle0_180(r);
   }
@@ -102,24 +99,23 @@ extension FRadian on double {
 
 extension FRadianCoordinate on Coordinate {
   static Coordinate complementaryOf(Coordinate radian) => Coordinate(
-    FRadian.complementaryOf(radian.dx),
-    FRadian.complementaryOf(radian.dy),
-    FRadian.complementaryOf(radian.dz),
-  );
+        FRadian.complementaryOf(radian.dx),
+        FRadian.complementaryOf(radian.dy),
+        FRadian.complementaryOf(radian.dz),
+      );
 
   static Coordinate supplementaryOf(Coordinate radian) => Coordinate(
-    FRadian.supplementaryOf(radian.dx),
-    FRadian.supplementaryOf(radian.dy),
-    FRadian.supplementaryOf(radian.dz),
-  );
+        FRadian.supplementaryOf(radian.dx),
+        FRadian.supplementaryOf(radian.dy),
+        FRadian.supplementaryOf(radian.dz),
+      );
 
   static Coordinate restrictInAngle180Of(Coordinate radian) => Coordinate(
-    FRadian.restrictWithinAngle180_180N(radian.dx),
-    FRadian.restrictWithinAngle180_180N(radian.dy),
-    FRadian.restrictWithinAngle180_180N(radian.dz),
-  );
+        FRadian.restrictWithinAngle180_180N(radian.dx),
+        FRadian.restrictWithinAngle180_180N(radian.dy),
+        FRadian.restrictWithinAngle180_180N(radian.dz),
+      );
 }
-
 
 ///
 ///
@@ -135,9 +131,8 @@ extension FRadianCoordinate on Coordinate {
 
 extension FPredicator on Predicator {
   static Predicator<DateTime> isSameDayWith(DateTime? day) =>
-          (currentDay) => DateTimeExtension.isSameDay(currentDay, day);
+      (currentDay) => DateTimeExtension.isSameDay(currentDay, day);
 }
-
 
 extension FPredicatorNum on Predicator<num> {
   static bool isALess(num a, num b) => a < b;
@@ -178,10 +173,10 @@ extension FPredicatorTernaryCombiner on Combiner {
       b == null || a == null
           ? null
           : switch (a - b) {
-        0 => true,
-        < 0 => false,
-        _ => null,
-      };
+              0 => true,
+              < 0 => false,
+              _ => null,
+            };
 }
 
 ///
@@ -236,7 +231,7 @@ extension FMapperDouble on Mapper<double> {
   /// sin
   ///
   static Mapper<double> sinFromFactor(double timeFactor, double factor) =>
-          (value) => math.sin(timeFactor * value) * factor;
+      (value) => math.sin(timeFactor * value) * factor;
 
   // return "times of period" of (0 ~ 1 ~ 0 ~ -1 ~ 0)
   static Mapper<double> sinFromPeriod(double times) {
@@ -244,8 +239,8 @@ extension FMapperDouble on Mapper<double> {
       begin: 0.0,
       end: switch (times) {
         double.infinity || double.negativeInfinity => throw UnimplementedError(
-          'instead of times infinity, pls use [Ani] to repeat animation',
-        ),
+            'instead of times infinity, pls use [Ani] to repeat animation',
+          ),
         _ => KRadian.angle_360 * times,
       },
     );
@@ -277,10 +272,64 @@ extension FGenerator on Generator {
   static Generator<T> fill<T>(T value) => (i) => value;
 }
 
-
 extension FGeneratorRadius on List<Radius> {
   static List<Radius> circular(int n, double radius) =>
       List.generate(n, (index) => Radius.circular(radius));
+}
+
+extension FGeneratorOffset on Generator<Offset> {
+  static Generator<Offset> withValue(
+    double value,
+    Offset Function(int index, double value) generator,
+  ) =>
+      (index) => generator(index, value);
+
+  static Generator<Offset> leftRightLeftRight(
+    double dX,
+    double dY, {
+    required Offset topLeft,
+    required Offset Function(int line, double dX, double dY) left,
+    required Offset Function(int line, double dX, double dY) right,
+  }) =>
+      (i) {
+        final indexLine = i ~/ 2;
+        return topLeft +
+            (i % 2 == 0 ? left(indexLine, dX, dY) : right(indexLine, dX, dY));
+      };
+
+  static Generator<Offset> grouping2({
+    required double dX,
+    required double dY,
+    required int modulusX,
+    required int modulusY,
+    required double constantX,
+    required double constantY,
+    required double group2ConstantX,
+    required double group2ConstantY,
+    required int group2ThresholdX,
+    required int group2ThresholdY,
+  }) =>
+      (index) => Offset(
+            constantX +
+                (index % modulusX) * dX +
+                (index > group2ThresholdX ? group2ConstantX : 0),
+            constantY +
+                (index % modulusY) * dY +
+                (index > group2ThresholdY ? group2ConstantY : 0),
+          );
+
+  static Generator<Offset> topBottomStyle1(double group2ConstantY) => grouping2(
+        dX: 78,
+        dY: 12,
+        modulusX: 6,
+        modulusY: 24,
+        constantX: -25,
+        constantY: -60,
+        group2ConstantX: 0,
+        group2ConstantY: group2ConstantY,
+        group2ThresholdX: 0,
+        group2ThresholdY: 11,
+      );
 }
 
 ///
@@ -318,8 +367,8 @@ extension FTranslator on Translator {
 
 extension FTextFormFieldValidator on TextFormFieldValidator {
   static FormFieldValidator<String> validateNullOrEmpty(
-      String validationFailedMessage,
-      ) =>
-          (value) =>
-      value == null || value.isEmpty ? validationFailedMessage : null;
+    String validationFailedMessage,
+  ) =>
+      (value) =>
+          value == null || value.isEmpty ? validationFailedMessage : null;
 }

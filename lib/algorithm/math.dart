@@ -322,7 +322,7 @@ enum Direction2DIn8 with Direction<Direction2DIn8> {
     bottomRight => Alignment.bottomRight,
   };
 
-  DirectionExtruding extruding([Offset? start]) {
+  Extruding extruding([Offset? start]) {
     final o = start ?? toOffset;
     return switch (this) {
       Direction2DIn8.top => (width, length) => Rect.fromPoints(

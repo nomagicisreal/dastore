@@ -298,7 +298,9 @@ extension WColoredBox on ColoredBox {
 ///
 ///
 
-
+extension WWidgetBuilder on WidgetBuilder {
+  static WidgetBuilder of(Widget child) => (_) => child;
+}
 
 extension FImageLoadingBuilder on ImageLoadingBuilder {
   static Widget style1(
