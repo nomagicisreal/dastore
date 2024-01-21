@@ -43,6 +43,14 @@ extension NullableExtension<T> on T? {
 
   S? nullOrTranslate<S>(Translator<T, S> value) =>
       this == null ? null : value(this as T);
+
+  S translateOr<S>(
+      Translator<T, S> translate, {
+        required Supplier<S> ifAbsent,
+      }) {
+    final value = this;
+    return value == null ? ifAbsent() : translate(value);
+  }
 }
 
 ///

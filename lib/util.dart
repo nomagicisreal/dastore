@@ -19,6 +19,9 @@
 /// [Predicator], [PredicatorTernary]
 /// [Generator], [Generator2D]
 /// [Extruding]
+///
+/// [WidgetChildrenBuilder]
+/// [WidgetListBuilder]
 /// [TextFormFieldValidator]
 ///
 ///
@@ -80,6 +83,8 @@ typedef WidgetChildrenBuilder = Widget Function(
   BuildContext context,
   List<Widget> children,
 );
+typedef WidgetListBuilder = List<Widget> Function(BuildContext context);
+
 typedef TextFormFieldValidator = FormFieldValidator<String> Function(
   String failedMessage,
 );

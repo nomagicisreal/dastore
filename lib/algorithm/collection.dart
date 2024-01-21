@@ -969,6 +969,7 @@ extension IterableSetExtension<I> on Iterable<Set<I>> {
 /// [removeFirst], [removeWhereAndGet]
 /// [fillUntil]
 /// [copy], [copyFillUntil], ...
+/// [reversedExceptFirst]
 /// [rearrangeAs]
 /// [intersectionWith]
 /// [differenceWith], [differenceIndexWith]
@@ -1108,6 +1109,7 @@ extension ListExtension<T> on List<T> {
   /// copy
   /// [copy]
   /// [copyFillUntil]
+  /// [reversedExceptFirst]
   ///
   ///
   List<T> get copy => List.of(this);
@@ -1116,6 +1118,15 @@ extension ListExtension<T> on List<T> {
         ...this,
         ...List.filled(length - this.length, value),
       ];
+
+  List<T> get reversedExceptFirst {
+    final length = this.length - 1;
+    final result = <T>[first];
+    for (var i = length ; i > 0 ; i--) {
+      result.add(this[i]);
+    }
+    return result;
+  }
 
   ///
   ///

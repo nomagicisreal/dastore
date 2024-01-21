@@ -17,7 +17,9 @@
 /// [WSizedBox], [WColoredBox]
 ///
 /// function for widget related elements:
-/// [FImageLoadingBuilder], [FImageErrorWidgetBuilder]
+/// [WWidgetBuilder]
+/// [WImageLoadingBuilder], [WImageErrorWidgetBuilder]
+///
 /// [FBoxShadow]
 /// [FBorderSide], [FBorderBox], [FBorderOutlined], [FBorderInput]
 /// [FDecorationBox], [FDecorationShape], [FDecorationInput]
@@ -300,9 +302,11 @@ extension WColoredBox on ColoredBox {
 
 extension WWidgetBuilder on WidgetBuilder {
   static WidgetBuilder of(Widget child) => (_) => child;
+  static List<WidgetBuilder> ofList(List<Widget> children) =>
+      children.mapToList((child) => (_) => child);
 }
 
-extension FImageLoadingBuilder on ImageLoadingBuilder {
+extension WImageLoadingBuilder on ImageLoadingBuilder {
   static Widget style1(
     BuildContext context,
     Widget child,
@@ -383,7 +387,7 @@ extension FImageLoadingBuilder on ImageLoadingBuilder {
             );
 }
 
-extension FImageErrorWidgetBuilder on ImageErrorWidgetBuilder {
+extension WImageErrorWidgetBuilder on ImageErrorWidgetBuilder {
   static Widget accountStyle2(BuildContext c, Object o, StackTrace? s) =>
       WIconMaterial.accountCircleStyle2;
 
