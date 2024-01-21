@@ -6,10 +6,11 @@
 ///
 ///
 /// [FPredicator], [FPredicatorNum], [FPredicatorCombiner], [FPredicatorTernaryCombiner]
+/// [FComparatorList]
 /// [FMapper], [FMapperDouble], [FMapperBoxConstraints]
-/// [FGenerator], [FGeneratorRadius], [FGeneratorOffset]
+/// [FGenerator], [FGeneratorRadius], [FGeneratorOffset], [FGenerator2D]
 /// [FTranslator]
-///
+/// [FReducerNum]
 ///
 ///
 ///
@@ -182,6 +183,30 @@ extension FPredicatorTernaryCombiner on Combiner {
 ///
 ///
 ///
+/// comparator
+///
+///
+///
+extension FComparatorList<C extends Comparable> on Comparator<List<C>> {
+  static Comparator<List<C>> accordinglyUntil<C extends Comparable>(
+      int index, [
+        Comparator<C>? comparator,
+      ]) {
+    final compare = comparator ?? (C a, C b) => a.compareTo(b);
+    return (a, b) {
+      int comparing(int i) {
+        final value = compare(b[i], a[i]);
+        return value == 0 && i < index ? comparing(i + 1) : value;
+      }
+
+      return comparing(0);
+    };
+  }
+}
+
+///
+///
+///
 ///
 ///
 /// mapper
@@ -332,6 +357,10 @@ extension FGeneratorOffset on Generator<Offset> {
       );
 }
 
+extension FGenerator2D<T> on Generator2D<T> {
+  static Generator2D<T> of<T>(T value) => (i, j) => value;
+}
+
 ///
 ///
 ///
@@ -355,6 +384,25 @@ extension FTranslator on Translator {
 
   static Translator<int, bool> oddOrEvenCheckerOpposite(int value) =>
       value.isOdd ? (v) => v.isEven : (v) => v.isOdd;
+}
+
+///
+/// [doubleMax], [doubleMin]
+/// [doubleAdding]
+///
+/// [intMax], [intMin]
+/// [intAdding]
+///
+extension FReducerNum<N extends num> on Reducer<N> {
+  static const Reducer<double> doubleMax = math.max<double>;
+  static const Reducer<double> doubleMin = math.min<double>;
+  static const Reducer<double> doubleAdding = _doubleAdding;
+  static const Reducer<int> intMax = math.max<int>;
+  static const Reducer<int> intMin = math.min<int>;
+  static const Reducer<int> intAdding = _intAdding;
+
+  static double _doubleAdding(double v1, double v2) => v1 + v2;
+  static int _intAdding(int v1, int v2) => v1 + v2;
 }
 
 ///

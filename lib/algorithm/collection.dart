@@ -6,13 +6,13 @@
 ///
 ///
 /// [IterableExtension]
-/// [IterableIntExtension], [IterableOffsetExtension], [IterableTimerExtension]
+/// [IterableIntExtension], [IterableDoubleExtension], [IterableOffsetExtension], [IterableTimerExtension]
 /// [IterableIterableExtension], [IterableSetExtension]
 ///
 ///
 /// [ListExtension]
-/// [ListOffsetExtension]
-/// [ListListExtension], [ListSetExtension]
+/// [ListOffsetExtension], [ListComparableExtension]
+/// [ListListExtension], [ListListComparableExtension], [ListSetExtension]
 ///
 ///
 /// [MapEntryExtension]
@@ -111,17 +111,41 @@ extension DoubleExtension on double {
 
 ///
 /// instance methods, getters:
-/// [digit], [digitFirst]
+/// [isPositive]
 /// [accumulate], [factorial]
+/// [digit], [digitFirst]
 ///
 /// static methods:
 /// [accumulation]
 /// [fibonacci]
 /// [pascalTriangle]
 /// [binomialCoefficient]
+/// [partition], [partitionOf], [partitionGroups]
 ///
 ///
 extension IntExtension on int {
+  bool get isPositiveOrZero => !isNegative;
+
+  bool get isPositive => !isNegative && this != 0;
+
+  int get accumulate {
+    assert(isPositiveOrZero, 'invalid accumulate integer: $this');
+    int accelerator = 0;
+    for (var i = 1; i <= this; i++) {
+      accelerator += i;
+    }
+    return accelerator;
+  }
+
+  int get factorial {
+    assert(isPositive, 'invalid factorial integer: $this');
+    int accelerator = 1;
+    for (var i = 1; i <= this; i++) {
+      accelerator *= i;
+    }
+    return accelerator;
+  }
+
   int digit({int carry = 10}) {
     int value = abs();
     int d = 0;
@@ -132,29 +156,9 @@ extension IntExtension on int {
   int digitFirst({int carry = 10}) {
     final value = math.pow(carry, digit(carry: carry) - 1).toInt();
     int i = 0;
-    for (; value * i < this; i ++) {}
+    for (; value * i < this; i++) {}
     return i - 1;
   }
-
-  int get accumulate {
-    assert(!isNegative && this != 0, 'invalid accumulate integer: $this');
-    int accelerator = 1;
-    for (var i = 1; i <= this; i++) {
-      accelerator += i;
-    }
-    return accelerator;
-  }
-
-  int get factorial {
-    assert(!isNegative && this != 0, 'invalid factorial integer: $this');
-    int accelerator = 1;
-    for (var i = 1; i <= this; i++) {
-      accelerator *= i;
-    }
-    return accelerator;
-  }
-
-  Combination combinationIn(int n) => Combination(this, n);
 
   ///
   /// [1, 3, 6, 10, 15, ...]
@@ -254,17 +258,40 @@ extension IntExtension on int {
   }
 
   ///
-  /// the "row" concept in [binomialCoefficient] are similar to [pascalTriangle],
-  /// but this function calculate values in more efficient way, only calculate only necessary values in "row"s.
-  /// in this function, the row( 2 ) means [1, 2, 1], row( 3 ) means [1, 3, 3, 1]
   ///
-  /// when ([n] = 10, [k] = 9), take 8, 9, 10 rows for example,
+  /// [binomialCoefficient], [_binomialCoefficient]
+  ///
+  ///
+
+  ///
+  /// [binomialCoefficient]
+
+  ///
+  /// see the comment above [_binomialCoefficient] for implementation detail
+  ///
+  static int binomialCoefficient(int n, int k) {
+    assert(
+      n > 0 && k > 0 && k <= n + 1,
+      throw ArgumentError('binomial coefficient for ($n, $k)'),
+    );
+    return k == 1 || k == n + 1
+        ? 1
+        : k == 2 || k == n
+            ? n
+            : _binomialCoefficient(n, k);
+  }
+
+  ///
+  /// Let "row( [n] )" be list of binomial coefficient, for example:
+  ///   row( 2 ) = [1, 2, 1]
+  ///   row( 3 ) = [1, 3, 3, 1]
+  ///
+  /// Let "floor" represents all the essential values in a "row", for example, when ([n] = 10, [k] = 9),
   ///   row( 8 ) = [... 28,    8,    1]
   ///   row( 9 ) = [...  ?,   36,    9]
   ///   row( 10 ) = [...  ?,    ?,   45]
   /// Because '45' comes from '36+9', '36' comes from '18+8', '9' comes from '8+1',
-  /// it's redundant to calculate '?', which are unnecessary values. Let "floor" indicates essential values in a "row",
-  /// solution for (n = 10, k = 9) in this function only calculate for values below:
+  /// it's redundant to calculate '?', which are unnecessary values. solution for it required the values below:
   ///   floor( 2 ) = [1, 2, 1]
   ///   floor( 3 ) = [3, 3, 1]
   ///   floor( 4 ) = [6,  4,  1]
@@ -274,19 +301,8 @@ extension IntExtension on int {
   ///   floor( 8 ) = [28,  8,  1]
   ///   floor( 9 ) = [36,  9]
   ///   floor( 10 ) = [45]
-  /// see the comment above [_binomialCoefficient] for implementation detail.
   ///
-  static int binomialCoefficient(int n, int k) {
-    assert(n > 0 && k > 0 && k <= n + 1, throw ArgumentError('($n, $k)'));
-    return k == 1 || k == n + 1
-        ? 1
-        : k == 2 || k == n
-            ? n
-            : _binomialCoefficient(n, k);
-  }
-
-  ///
-  /// the description below are variables used in [_binomialCoefficient], describes how it works
+  /// the description below are variables used in this function, describes how it works
   /// [fEnd] --- the last floor that corresponding row([fEnd])[k] is 1.
   ///   take the sample above ([n] == 10, [k] == 9) for example,
   ///     floor(10) = [45],
@@ -327,14 +343,300 @@ extension IntExtension on int {
     }
     return floorOf(n).first;
   }
+
+
+  ///
+  /// Generally, these methods return the possible partition of an integer [m],
+  /// [partition]
+  /// [partitionOf]
+  /// [partitionGroups]
+  ///
+  /// and these private methods are the implementation of those methods
+  /// [_partition]
+  /// [_partitionSpace]
+  /// [_partitionElementGenerator]
+  /// [_partitionSearchOnFloor]
+  ///
+  /// see the comment under [partitionGroups], above [_partition] to understand the implement logic
+  /// see also https://en.wikipedia.org/wiki/Partition_(number_theory) for academic definition
+  ///
+
+  ///
+  /// [partition] return the possible partition in [n] group for an integer [m],
+  /// and each group must not be empty.
+  ///
+  /// for example, when [m] = 7, [n] = 4, this function returns 3 because there are 3 possible partition:
+  /// [4, 1, 1, 1]
+  /// [3, 2, 1, 1]
+  /// [2, 2, 2, 1]
+  ///
+  static int partition(int m, int n) {
+    assert(
+    m.isPositiveOrZero && n <= m,
+    'it is impossible to partition $m into $n group',
+    );
+    return _partition(m, n, space: _partitionSpace<int>(m, n: n));
+  }
+
+  ///
+  /// [partitionOf] return the possible partitions for an integer [m],
+  /// and each group must not be empty.
+  ///
+  /// for example, when [m] = 5, this function return 7 because there are 7 possible partition for 5:
+  /// (5)
+  /// (4, 1)
+  /// (3, 2)
+  /// (3, 1, 1)
+  /// (2, 2, 1)
+  /// (2, 1, 1, 1)
+  /// (1, 1, 1, 1, 1)
+  ///
+  static int partitionOf(int m) {
+    assert(m.isPositiveOrZero, 'it is impossible to partition $m');
+    final pSpace = _partitionSpace<int>(m);
+    return Iterable.generate(
+      m,
+          (i) => _partition<int>(m, i + 1, space: pSpace),
+    ).reduce((p1, p2) => p1 + p2);
+  }
+
+  ///
+  /// [partitionGroups] return entire groups of possible partition,
+  /// and each group must not be empty.
+  ///
+  /// for example, when [m] = 8, [n] = 4, this function returns [
+  ///   [5, 1, 1, 1],
+  ///   [4, 2, 1, 1],
+  ///   [3, 3, 1, 1],
+  ///   [3, 2, 2, 1],
+  ///   [2, 2, 2, 2],
+  /// ]
+  ///
+  static List<List<int>> partitionGroups(int m, int n) {
+    assert(
+    m.isPositiveOrZero && n <= m,
+    'it is impossible to partition $m into $n group',
+    );
+    final groups = _partition(
+      m,
+      n,
+      space: _partitionSpace<List<List<int>>>(m, n: n),
+    );
+    assert(groups.every((element) => element.length == n), 'runtime error');
+    return groups;
+  }
+
+  ///
+  /// The "row" concept in here helps to calculate values in more efficient way. definition:
+  ///   row( 2 ) = [1, 1, 1]
+  ///   row( 3 ) = [1, 1, 1, 1]
+  /// because there is only 1 way to partition integer 2 into 0 group, 1 group or 2 group,
+  /// and there is also only 1 way to partition integer 3 into 0 group, 1 group, 2 group, 3 group.
+  /// based on "row" concept, the return value or the answer is equivalent to row([m])([n]).
+  ///
+  /// To find out the answer, we have to repeat a step:
+  /// calculating row( i )( j ) by summarizing row( i-j )( 1 ) to row( i-j )( min(i-j, j) ),
+  /// and in the first step, i = [m], j = [n].
+  ///   - Take i = 10, j = 7 for example,
+  ///     it means that there are 10 same elements have to be partitioned into 7 group.
+  ///     Because each group must have 1 element at least,
+  ///     we have to consider how many possible partition in 7 group actually for 3 (i-j) element.
+  ///     That is, it's possible that 3 elements partitioned into 1 group, 2 group, 3 group. (1 to i-j),
+  ///     so the summarize of row(3)(1) to row(3)(3) is the answer.
+  ///
+  ///   - Take i = 20, j = 7 for example,
+  ///     it means that there are 20 same elements have to be partitioned into 7 group.
+  ///     Because we have to consider how many possible partition in 7 group actually for 13 (i-j) element.
+  ///     it's possible that 13 elements partitioned into 1 group, 2 group, ... 7 group. (1 to j)
+  ///
+  /// Let "floor" correspond to "row" and contains all the essential values of corresponding row.
+  /// Let "target floor" represents "floor( [m]-[n] )". In convenient of discussion,
+  /// all the index blow starts by 1, because [n] = 0 not in the consideration of this function.
+  ///
+  /// Take ([m] = 10, [n] = 4) for example, the description below shows how to use the "floors",
+  ///   row(10)(4) = floor(6)(1) + ... + floor(6)(4)
+  ///     floor(6)(1) = 1
+  ///     floor(6)(2) = floor(4)(1) + ... + floor(4)(2)
+  ///     floor(6)(3) = floor(3)(1) + ... + floor(3)(3)
+  ///     floor(6)(4) = floor(2)(1) + ... + floor(2)(2)
+  ///       floor(4)(1) + floor(4)(2) = floor(4)(1) + floor(2)(1) + floor(2)(2) = 1 + 1 + 1 = 3
+  ///       floor(3)(1) + floor(3)(2) + floor(3)(3) = 1 + 1 + 1 = 3
+  ///       floor(2)(1) + floor(2)(2) = 1 + 1 = 2
+  ///   row(10)(4) = floor(6)(1) + ... + floor(6)(5) = 1 + 3 + 3 + 2 = 9 #
+  /// during the calculation, the required floors are:
+  ///   floor( 2 ) = [1, 1]
+  ///   floor( 3 ) = [1, 1, 1]
+  ///   floor( 4 ) = [1, 2]
+  ///   floor( 6 ) = [1, 3, 3, 2] (this floor is target floor)
+  /// with those "floor", we can get the answer of ([m] = 10, [n] = 4).
+  ///
+  /// [_partition] implementation is based on the discussion above
+  /// [_partitionSpace] for [space] helps to prevent invoking [elementOf] in [_partition] redundantly.
+  /// [_partitionElementGenerator] is the generator to find row element
+  /// [_partitionSearchOnFloor] is a way to find out where a row element comes from
+  ///
+  ///
+
+  ///
+  ///
+  static P _partition<P>(
+      int m,
+      int n, {
+        required List<List<P>> space,
+      }) =>
+      switch (space) {
+        List<List<int>>() => () {
+          final partitionSpace = space as List<List<int>>;
+          late final Reducer<int> elementOf;
+
+          int instancesOf(int i, int j) {
+            int sum = 1;
+            _partitionSearchOnFloor<int>(
+              i,
+              j,
+              space: partitionSpace,
+              elementOf: elementOf,
+              predicate: (p) => p == 1,
+              consume: (p) => sum += p,
+              trailing: (_) => sum++,
+            );
+            return sum;
+          }
+
+          elementOf = _partitionElementGenerator(
+            atFirst: FGenerator2D.of(1),
+            atLast: FGenerator2D.of(1),
+            atLastPrevious: FGenerator2D.of(1),
+            instancesOf: instancesOf,
+          );
+
+          return elementOf(m, n);
+        }(),
+        List<List<Iterable<List<int>>>>() => () {
+          final partitionSpace = space as List<List<Iterable<List<int>>>>;
+          late final Generator2D<Iterable<List<int>>> elementOf;
+
+          print('($m, $n)');
+
+          List<int> firstOf(int n) => [n];
+          List<int> lastOf(int n) => List.filled(n, 1, growable: true);
+          List<int> lastPreviousOf(int n) => [2, ...List.filled(n - 2, 1)];
+
+          Iterable<List<int>> instancesOf(int i, int j) {
+            final instances = [firstOf(i)];
+            _partitionSearchOnFloor<Iterable<List<int>>>(
+              i,
+              j,
+              space: partitionSpace,
+              elementOf: elementOf,
+              predicate: (p) => p.isEmpty,
+              consume: (p) => instances.addAll(p),
+              trailing: (current) => instances.add(
+                (current == i ? lastOf(i) : lastPreviousOf(i)),
+              ),
+            );
+            return instances;
+          }
+
+          elementOf = _partitionElementGenerator(
+            atFirst: (i, j) => [firstOf(i)],
+            atLast: (i, j) => [lastOf(j)],
+            atLastPrevious: (i, j) => [lastPreviousOf(j)],
+            instancesOf: (i, j) {
+              final instances = instancesOf(i, j);
+              final result = <List<int>>[];
+              for (var instance in instances) {
+                result.add([
+                  ...instance.map((element) => element + 1),
+                  ...Iterable.generate(j - instance.length, (_) => 1),
+                ]);
+              }
+              return result;
+            },
+          );
+
+          return elementOf(m, n);
+        }(),
+        _ => throw UnimplementedError(),
+      } as P;
+
+  ///
+  /// [_partitionSpace] specify how much space a [_partition] needs.
+  /// with predicator, it can prevent calculation for the same value in [_partitionSearchOnFloor].
+  /// the values inside [List]<[List]<[P]>> will update during the loop if:
+  ///   [P] == [int] && element is 1
+  ///   [P] == [int] && element is empty
+  ///
+  /// the return space row must start from row(4) to row(i), correspond to list[0] to list[i-4]
+  /// the return space column must start from row(i)(2) to row(i)(j), correspond to list[i][0] to list[i][j-2]
+  ///
+  /// instead of [List.filled], using [List.generate] prevents shared instance for list
+  ///
+  static List<List<P>> _partitionSpace<P>(int m, {int? n}) {
+    final spaceRow = math.max(0, m - 3 - (n ?? 0));
+    final Generator<P> generator = P == int
+        ? (_) => 1 as P
+        : (P == List<List<int>>)
+        ? (_) => <List<int>>[] as P
+        : throw UnimplementedError(
+      'generic type must be int or Iterable<List<int>>, current: $P',
+    );
+    return List.generate(
+      spaceRow,
+      n == null
+          ? (f) => List.generate(math.min(f + 1, spaceRow - f), generator)
+          : (f) => List.generate(math.min(f + 1, n), generator),
+    );
+  }
+
+  ///
+  ///
+  static Generator2D<T> _partitionElementGenerator<T>({
+    required Generator2D<T> atFirst,
+    required Generator2D<T> atLast,
+    required Generator2D<T> atLastPrevious,
+    required Generator2D<T> instancesOf,
+  }) =>
+          (i, j) {
+        if (j == 1) return atFirst(i, j);
+        if (j == i) return atLast(i, j);
+        if (j == i - 1) return atLastPrevious(i, j);
+        return instancesOf(i - j, j);
+      };
+
+  ///
+  ///
+  static void _partitionSearchOnFloor<P>(
+      int i,
+      int j, {
+        required List<List<P>> space,
+        required Generator2D<P> elementOf,
+        required Predicator<P> predicate,
+        required void Function(P instance) consume,
+        required void Function(int current) trailing,
+      }) {
+    final min = math.min(i, j);
+    final bound = min == i
+        ? math.max(1, min - 2)
+        : min == i - 1
+        ? min - 1
+        : min;
+    for (var k = 2; k <= bound; k++) {
+      P p = space[i - 4][k - 2];
+      if (predicate(p)) p = space[i - 4][k - 2] = elementOf(i, k);
+      consume(p);
+    }
+    for (var current = bound + 1; current <= min; current++) {
+      trailing(current);
+    }
+  }
 }
 
 ///
 /// static methods:
 /// [fill], [generateFrom]
 ///
-/// instance methods
-/// [hasElement]
+/// instance getter and methods
 /// [notContains]
 /// [search]
 /// [iteratingWith]
@@ -342,8 +644,10 @@ extension IntExtension on int {
 /// [foldWithIndex], [foldWith]
 /// [reduceWithIndex], [reduceWith], [reduceTo], [reduceToNum], [reduceTogether]
 /// [expandWithIndex], [expandWith], [flat], [mapToList]
-/// [chunk]
 ///
+/// [chunk]
+/// [groupBy]
+/// [lengthFlatted]
 ///
 extension IterableExtension<I> on Iterable<I> {
   static Iterable<I> generateFrom<I>(
@@ -360,8 +664,6 @@ extension IterableExtension<I> on Iterable<I> {
 
   static Iterable<I> fill<I>(int count, I value) =>
       Iterable.generate(count, FGenerator.fill(value));
-
-  bool get hasElement => !isEmpty;
 
   bool notContains(I element) => !contains(element);
 
@@ -382,20 +684,25 @@ extension IterableExtension<I> on Iterable<I> {
     }
   }
 
-  bool everyCompare(
-    Iterable<I> another,
-    Comparator<I> comparator, {
+  bool everyCompare<P>(
+    Iterable<P> another,
+    Differentiator<I, P> differentiate, {
     int expect = 0,
   }) {
     assert(length == another.length);
     final i1 = iterator;
     final i2 = another.iterator;
     while (i1.moveNext() && i2.moveNext()) {
-      if (comparator(i1.current, i2.current) != expect) {
+      if (differentiate(i1.current, i2.current) != expect) {
         return false;
       }
     }
     return true;
+  }
+
+  bool everyWithIndex(Checker<I> checker, {int start = 0}) {
+    int index = start - 1;
+    return every((element) => checker(element, ++index));
   }
 
   bool everyIsEqual(Iterable<I> another) => everyCompare(
@@ -471,11 +778,11 @@ extension IterableExtension<I> on Iterable<I> {
     return val;
   }
 
-  N reduceToNum<N extends num>(
-    Translator<I, N> translator, {
-    Reducer<N>? reducer,
+  N reduceToNum<N extends num>({
+    required Reducer<N> reducer,
+    required Translator<I, N> translator,
   }) =>
-      reduceTo(reducer ?? math.max<N>, translator);
+      reduceTo(reducer, translator);
 
   S reduceTogether<S>(
     Iterable<S> another,
@@ -540,10 +847,36 @@ extension IterableExtension<I> on Iterable<I> {
     }
     return splitList;
   }
+
+  Map<S, List<I>> groupBy<S>(Translator<I, S> translator) {
+    final map = <S, List<I>>{};
+    for (var item in this) {
+      map.update(
+        translator(item),
+            (value) => value..add(item),
+        ifAbsent: () => [item],
+      );
+    }
+    return map;
+  }
+
+  int lengthFlatted<S>() => reduceToNum(
+        reducer: (v1, v2) => v1 + v2,
+        translator: (element) => switch (element) {
+          S() => 1,
+          Iterable<S>() => element.length,
+          Iterable<Iterable<dynamic>>() => element.lengthFlatted(),
+          _ => throw UnimplementedError('unknown type: $element for $S'),
+        },
+      );
 }
 
-extension IterableIntExtension on Iterable<num> {
-  num get summary => reduce((value, element) => value + element);
+extension IterableIntExtension on Iterable<int> {
+  int get sum => reduce((value, element) => value + element);
+}
+
+extension IterableDoubleExtension on Iterable<double> {
+  double get sum => reduce((value, element) => value + element);
 }
 
 extension IterableOffsetExtension on Iterable<Offset> {
@@ -578,7 +911,7 @@ extension IterableTimerExtension on Iterable<Timer> {
 ///
 /// [lengths]
 /// [toStringPadLeft], [mapToStringJoin]
-/// [everyLengthIsEqual], [isSizeEqual]
+/// [isSizeEqual]
 /// [foldWith2D]
 ///
 extension IterableIterableExtension<I> on Iterable<Iterable<I>> {
@@ -594,17 +927,7 @@ extension IterableIterableExtension<I> on Iterable<Iterable<I>> {
   ]) =>
       map(mapper ?? (e) => e.toString()).join(separator);
 
-  bool everyLengthIsEqual<S>(Iterable<Iterable<S>> another) {
-    assert(length == another.length, 'length must be equal');
-    final i1 = iterator;
-    final i2 = another.iterator;
-    while (i1.moveNext() && i2.moveNext()) {
-      if (i1.current.length != i2.current.length) return false;
-    }
-    return true;
-  }
-
-  bool isSizeEqual(Iterable<Iterable<I>> another) =>
+  bool isSizeEqual<P>(Iterable<Iterable<P>> another) =>
       length == another.length &&
       everyCompare(
         another,
@@ -617,13 +940,12 @@ extension IterableIterableExtension<I> on Iterable<Iterable<I>> {
     S initialValue,
     Fusionor<S, I, P, S> fusionor,
   ) {
-    assert(everyLengthIsEqual(another));
-    var value = initialValue;
-    iteratingWith(
+    assert(isSizeEqual(another));
+    return foldWith(
       another,
-      (e, eAnother) => value = e.foldWith(eAnother, value, fusionor),
+      initialValue,
+      (value, e, eAnother) => value = e.foldWith(eAnother, value, fusionor),
     );
-    return value;
   }
 }
 
@@ -641,13 +963,12 @@ extension IterableSetExtension<I> on Iterable<Set<I>> {
 ///
 /// instance methods:
 /// [swap]
-/// [add2], [addIfNotNull]
-/// [addFirstAndRemoveFirst], [addFirstAndRemoveFirstAndGet]
-/// [getOrDefault],
-/// [update], [updateWithMapper]
-/// [updateAll], [updateAllWithMapper]
+/// [add2], [addIfNotNull], [addFirstAndRemoveFirst]...
+/// [getOrDefault],...
+/// [update], [updateWithMapper], ...
 /// [removeFirst], [removeWhereAndGet]
-///
+/// [fillUntil]
+/// [copy], [copyFillUntil], ...
 /// [rearrangeAs]
 /// [intersectionWith]
 /// [differenceWith], [differenceIndexWith]
@@ -739,6 +1060,9 @@ extension ListExtension<T> on List<T> {
         ..removeFirst())
       .last;
 
+  void addAllIfEmpty(Supplier<Iterable<T>> supplier) =>
+      isEmpty ? addAll(supplier()) : null;
+
   T getOrDefault(int position, T defaultValue) =>
       position < length ? this[position] : defaultValue;
 
@@ -773,6 +1097,25 @@ extension ListExtension<T> on List<T> {
     }
     return list;
   }
+
+  void fillUntil(int length, T value) {
+    for (var i = this.length; i < length; i++) {
+      add(value);
+    }
+  }
+
+  ///
+  /// copy
+  /// [copy]
+  /// [copyFillUntil]
+  ///
+  ///
+  List<T> get copy => List.of(this);
+
+  List<T> copyFillUntil(int length, T value) => [
+        ...this,
+        ...List.filled(length - this.length, value),
+      ];
 
   ///
   ///
@@ -903,6 +1246,146 @@ extension ListOffsetExtension on List<Offset> {
   }
 }
 
+///
+/// [sortMerge]
+/// [sortPivot]
+///
+extension ListComparableExtension<C extends Comparable> on List<C> {
+  ///
+  /// [sortMerge] aka merge sort:
+  ///   1. regarding current list as the mix of 2 elements sublist, sorting for each sublist
+  ///   2. regarding current list as the mix of sorted sublists, merging sublists into bigger ones
+  ///     (2 elements -> 4 elements -> 8 elements -> ... -> n elements)
+  ///
+  /// when [isIncreasing] = true,
+  /// it's means that when 'list item a' > 'list item b', element a should switch with b.
+  /// see [_sortMerge] for full implementation.
+  ///
+  void sortMerge([bool isIncreasing = true]) {
+    final increasing = isIncreasing ? 1 : -1;
+    final length = this.length;
+
+    final max = length.isEven ? length : length - 1;
+    for (var start = 0; start < max; start += 2) {
+      final a = this[start];
+      final b = this[start + 1];
+      if (a.compareTo(b) == increasing) {
+        this[start] = b;
+        this[start + 1] = a;
+      }
+    }
+    int sorted = 2;
+
+    while (sorted * 2 <= length) {
+      final target = sorted * 2;
+      final fixed = length - length % target;
+      int start = 0;
+
+      for (; start < fixed; start += target) {
+        final i = start + sorted;
+        final end = start + target;
+        replaceRange(
+          start,
+          end,
+          _sortMerge(sublist(start, i), sublist(i, end), isIncreasing),
+        );
+      }
+      if (fixed > 0) {
+        replaceRange(
+          0,
+          length,
+          _sortMerge(sublist(0, fixed), sublist(fixed, length), isIncreasing),
+        );
+      }
+      sorted *= 2;
+    }
+  }
+
+  ///
+  /// before calling [_sortMerge], [listA] and [listB] must be sorted.
+  /// when [isIncreasing] = true,
+  /// it's means that when 'listA item a' < 'listB item b', result should add a before add b.
+  ///
+  static List<C> _sortMerge<C extends Comparable>(
+    List<C> listA,
+    List<C> listB, [
+    bool isIncrease = true,
+  ]) {
+    final increase = isIncrease ? -1 : 1;
+    final result = <C>[];
+    final lengthA = listA.length;
+    final lengthB = listB.length;
+    int i = 0;
+    int j = 0;
+    while (i < lengthA && j < lengthB) {
+      final a = listA[i];
+      final b = listB[j];
+      if (a.compareTo(b) == increase) {
+        result.add(a);
+        i++;
+      } else {
+        result.add(b);
+        j++;
+      }
+    }
+    return result..addAll(i < lengthA ? listA.sublist(i) : listB.sublist(j));
+  }
+
+  ///
+  /// [sortPivot] separate list by the pivot item,
+  /// continue updating pivot item, sorting elements by comparing to pivot item.
+  /// see [_sortPivot] for full implementation
+  ///
+  void sortPivot([bool isIncreasing = true]) {
+    void sorting(int low, int high) {
+      if (low < high) {
+        final iPivot = _sortPivot(low, high, isIncreasing);
+        sorting(low, iPivot - 1);
+        sorting(iPivot + 1, high);
+      }
+    }
+
+    if (length > 1) sorting(0, length - 1);
+  }
+
+  ///
+  /// [_sortPivot] partition list by the the pivot item list[high], and return new pivot position.
+  ///
+  /// when [isIncreasing] = true,
+  /// it meas that the pivot point should search for how much item that is less than itself,
+  /// ensuring the items that less/large than pivot are in front of list,
+  /// preparing to switch the larger after the position of 'how much item' that pivot had found less than itself
+  ///
+  int _sortPivot(int low, int high, [bool isIncreasing = true]) {
+    final increasing = isIncreasing ? 1 : -1;
+    final pivot = this[high];
+    int i = low;
+    int j = low;
+
+    for (; j < high; j++) {
+      if (pivot.compareTo(this[j]) == increasing) {
+        i++;
+      } else {
+        break;
+      }
+    }
+
+    for (; j < high; j++) {
+      final current = this[j];
+      if (pivot.compareTo(current) == increasing) {
+        this[j] = this[i];
+        this[i] = current;
+        i++;
+      }
+    }
+
+    this[high] = this[i];
+    this[i] = pivot;
+
+    return i;
+  }
+}
+
 extension ListListExtension<T> on List<List<T>> {
   int get lengthFirst => first.length;
 
@@ -910,6 +1393,14 @@ extension ListListExtension<T> on List<List<T>> {
     final columnCount = this.lengthFirst;
     return every((element) => element.length == columnCount);
   }
+}
+
+extension ListListComparableExtension<C extends Comparable> on List<List<C>> {
+  void orderByElementFirst([Comparator<C>? comparator]) => sort(
+    comparator != null
+        ? (a, b) => comparator.call(a.first, b.first)
+        : (a, b) => b.first.compareTo(a.first),
+  );
 }
 
 extension ListSetExtension<I> on List<Set<I>> {
@@ -1024,9 +1515,9 @@ extension MapExtension<K, V> on Map<K, V> {
   S reduceTo<S>(Translator<MapEntry<K, V>, S> translator, Reducer<S> reducer) =>
       entries.reduceTo(reducer, translator);
 
-  N reduceToNum<N extends num>(
-    Translator<MapEntry<K, V>, N> translator, {
-    Reducer<N>? reducer,
+  N reduceToNum<N extends num>({
+    required Reducer<N> reducer,
+    required Translator<MapEntry<K, V>, N> translator,
   }) =>
-      entries.reduceToNum(translator, reducer: reducer);
+      entries.reduceToNum(reducer: reducer, translator: translator);
 }

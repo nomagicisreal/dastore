@@ -574,11 +574,9 @@ extension KCoordinate on Coordinate {
 }
 
 ///
-///
 /// positive radian means clockwise for [Transform] widget and [Offset.direction],
 /// but means counterclockwise for math discussion
-/// see also [KDirection]
-///
+/// see also [Direction]
 ///
 extension KRadian on double {
   static const angle_450 = math.pi * 5 / 2;

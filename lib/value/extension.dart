@@ -2,6 +2,7 @@
 ///
 /// this file contains:
 ///
+/// [NullableExtension]
 /// [StringExtension], [MatchExtension]
 /// [SizeExtension], [OffsetExtension], [RectExtension]
 /// [AlignmentExtension]
@@ -37,22 +38,12 @@
 ///
 part of dastore;
 
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
+extension NullableExtension<T> on T? {
+  S? nullOr<S>(S value) => this == null ? null : value;
 
+  S? nullOrTranslate<S>(Translator<T, S> value) =>
+      this == null ? null : value(this as T);
+}
 
 ///
 ///
@@ -928,4 +919,3 @@ extension BuildContextExtension on BuildContext {
 extension VoidCallbackExtension on VoidCallback {
   Future<void> delayed(Duration duration) => Future.delayed(duration, this);
 }
-

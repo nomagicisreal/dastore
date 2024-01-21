@@ -49,7 +49,7 @@ double clampDoublePositive(double value) => clampDouble(
 
 typedef Supplier<T> = T Function();
 typedef Consumer<T> = void Function(T value);
-typedef Absorber<P, Q> = void Function(P p, Q q);
+typedef Absorber<A, B> = void Function(A a, B b);
 typedef Mapper<T> = T Function(T value);
 typedef Reducer<T> = T Function(T v1, T v2);
 typedef Companion<T, S> = T Function(T host, S value);
@@ -68,10 +68,12 @@ typedef Sequencer<R, S, I> = Translator<int, R> Function(
 
 typedef Predicator<T> = bool Function(T a);
 typedef PredicatorTernary<T> = bool? Function(T value);
+typedef Checker<T> = bool Function(T value, int index);
 typedef Generator<T> = T Function(int index);
 typedef GeneratorFolder<P, Q, S> = S Function(int index, P p, Q q);
 typedef GeneratorReducer<T> = T Function(int index, T v1, T v2);
 typedef Generator2D<T> = T Function(int i, int j);
+typedef Differentiator<P, Q> = int Function(P p, Q q);
 typedef Extruding = Rect Function(double width, double height);
 
 typedef WidgetChildrenBuilder = Widget Function(
@@ -81,3 +83,4 @@ typedef WidgetChildrenBuilder = Widget Function(
 typedef TextFormFieldValidator = FormFieldValidator<String> Function(
   String failedMessage,
 );
+

@@ -1,6 +1,11 @@
 
-void main() {
+import 'dart:developer';
 
+import 'package:dastore/dastore.dart';
+
+void main() {
+  log(Combination(16, 4).toString());
+  // runApp(const MyApp());
 }
 
 // class MyApp extends StatelessWidget {

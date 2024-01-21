@@ -6,11 +6,8 @@
 ///
 ///
 /// [Direction]
-///   [Direction2DIn4]
-///   [Direction2DIn8]
-///   [Direction3DIn6]
-///   [Direction3DIn14]
-///   [Direction3DIn22]
+///   [Direction2DIn4], [Direction2DIn8],
+///   [Direction3DIn6], [Direction3DIn14], [Direction3DIn22]
 ///
 ///
 /// [Coordinate]
@@ -19,6 +16,10 @@
 /// [Vector3D]
 ///
 /// [Curving]
+///
+///
+///
+///
 ///
 ///
 ///
@@ -47,20 +48,20 @@ enum Operator {
 
   @override
   String toString() => switch (this) {
-    Operator.plus => '+',
-    Operator.minus => '-',
-    Operator.multiply => '*',
-    Operator.divide => '/',
-    Operator.modulus => '%',
-  };
+        Operator.plus => '+',
+        Operator.minus => '-',
+        Operator.multiply => '*',
+        Operator.divide => '/',
+        Operator.modulus => '%',
+      };
 
   String get latex => switch (this) {
-    Operator.plus => r'+',
-    Operator.minus => r'-',
-    Operator.multiply => r'\times',
-    Operator.divide => r'\div',
-    Operator.modulus => throw UnimplementedError(),
-  };
+        Operator.plus => r'+',
+        Operator.minus => r'-',
+        Operator.multiply => r'\times',
+        Operator.divide => r'\div',
+        Operator.modulus => throw UnimplementedError(),
+      };
 
   ///
   /// latex operation
@@ -69,94 +70,93 @@ enum Operator {
 
   String latexOperationOfDouble(double a, double b, {int fix = 0}) =>
       "${a.toStringAsFixed(fix)} "
-          "$latex "
-          "${b.toStringAsFixed(fix)}";
+      "$latex "
+      "${b.toStringAsFixed(fix)}";
 
   ///
   /// operate value
   ///
   double operateDouble(double a, double b) => switch (this) {
-    Operator.plus => a + b,
-    Operator.minus => a - b,
-    Operator.multiply => a * b,
-    Operator.divide => a / b,
-    Operator.modulus => a % b,
-  };
+        Operator.plus => a + b,
+        Operator.minus => a - b,
+        Operator.multiply => a * b,
+        Operator.divide => a / b,
+        Operator.modulus => a % b,
+      };
 
   static double operateDoubleAll(
-  double value,
-  Iterable<(Operator, double)> operations,
+    double value,
+    Iterable<(Operator, double)> operations,
   ) =>
-  operations.fold(
-  value,
-  (a, opertion) => switch (opertion.$1) {
-  Operator.plus => a + opertion.$2,
-  Operator.minus => a - opertion.$2,
-  Operator.multiply => a * opertion.$2,
-  Operator.divide => a / opertion.$2,
-  Operator.modulus => a % opertion.$2,
-  },
-  );
+      operations.fold(
+        value,
+        (a, opertion) => switch (opertion.$1) {
+          Operator.plus => a + opertion.$2,
+          Operator.minus => a - opertion.$2,
+          Operator.multiply => a * opertion.$2,
+          Operator.divide => a / opertion.$2,
+          Operator.modulus => a % opertion.$2,
+        },
+      );
 
   Duration operateDuration(Duration a, Duration b) => switch (this) {
-  Operator.plus => a + b,
-  Operator.minus => a - b,
-  _ => throw UnimplementedError(),
-  };
+        Operator.plus => a + b,
+        Operator.minus => a - b,
+        _ => throw UnimplementedError(),
+      };
 
   DurationFR operateDurationFR(DurationFR a, DurationFR b) => switch (this) {
-  Operator.plus =>
-  DurationFR(a.forward + b.forward, a.reverse + b.reverse),
-  Operator.minus =>
-  DurationFR(a.forward - b.forward, a.reverse - b.reverse),
-  _ => throw UnimplementedError(),
-  };
+        Operator.plus =>
+          DurationFR(a.forward + b.forward, a.reverse + b.reverse),
+        Operator.minus =>
+          DurationFR(a.forward - b.forward, a.reverse - b.reverse),
+        _ => throw UnimplementedError(),
+      };
 
   T operationOf<T>(T a, T b) => switch (a) {
-  double _ => operateDouble(a, b as double),
-  Duration _ => operateDuration(a, b as Duration),
-  DurationFR _ => operateDurationFR(a, b as DurationFR),
-  _ => throw UnimplementedError(),
-  } as T;
+        double _ => operateDouble(a, b as double),
+        Duration _ => operateDuration(a, b as Duration),
+        DurationFR _ => operateDurationFR(a, b as DurationFR),
+        _ => throw UnimplementedError(),
+      } as T;
 
   ///
   /// mapper
   ///
 
   double Function(double value) doubleCompanion(double b) => switch (this) {
-  Operator.plus => (a) => a + b,
-  Operator.minus => (a) => a - b,
-  Operator.multiply => (a) => a * b,
-  Operator.divide => (a) => a / b,
-  Operator.modulus => (a) => a % b,
-  };
+        Operator.plus => (a) => a + b,
+        Operator.minus => (a) => a - b,
+        Operator.multiply => (a) => a * b,
+        Operator.divide => (a) => a / b,
+        Operator.modulus => (a) => a % b,
+      };
 }
 
 ///
 ///
 ///
+/// [Direction], ...
 ///
+/// [Direction3DIn6] and "dart direction" ([Transform], [Matrix4], [Offset] direction) are different.
+/// The radian discussion here, follows these rules:
+/// - "positive radian" is counterclockwise, going through 0 ~ 2π.
+/// - [Direction3DIn6] is user perspective. ([Direction3DIn6.back] is user side, [Direction3DIn6.front] is screen side)
 ///
-///
-///
-///
-///
-/// direction
-///
-///
+/// For example, [Offset.fromDirection] radian 0 ~ 2π going through:
+/// [Direction3DIn6.right], [Direction3DIn6.bottom], [Direction3DIn6.left], [Direction3DIn6.top], [Direction3DIn6.right] in sequence;
+/// the axis of [Offset.fromDirection] is [Direction3DIn6.front] -> [Direction3DIn6.back],
+/// which is not counterclockwise in user perspective ([Direction3DIn6.back] -> [Direction3DIn6.front]).
 ///
 /// See Also:
 ///   * [KRadian]
-///   * [_MationTransformBase], [MationTransform]
 ///   * [Coordinate.transferToTransformOf], [Coordinate.fromDirection]
 ///
 ///
 ///
-///
-///
-///
-///
 
+///
+///
 base mixin Direction<D> {
   D get flipped;
 
@@ -192,29 +192,29 @@ base mixin Direction<D> {
   static const coordinate_back = Coordinate.ofZ(-1);
 
   static const coordinate_topLeft =
-  Coordinate.ofXY(-math.sqrt1_2, -math.sqrt1_2);
+      Coordinate.ofXY(-math.sqrt1_2, -math.sqrt1_2);
   static const coordinate_topRight =
-  Coordinate.ofXY(math.sqrt1_2, -math.sqrt1_2);
+      Coordinate.ofXY(math.sqrt1_2, -math.sqrt1_2);
   static const coordinate_bottomLeft =
-  Coordinate.ofXY(-math.sqrt1_2, math.sqrt1_2);
+      Coordinate.ofXY(-math.sqrt1_2, math.sqrt1_2);
   static const coordinate_bottomRight =
-  Coordinate.ofXY(math.sqrt1_2, math.sqrt1_2);
+      Coordinate.ofXY(math.sqrt1_2, math.sqrt1_2);
   static const coordinate_frontLeft =
-  Coordinate.ofXZ(-math.sqrt1_2, math.sqrt1_2);
+      Coordinate.ofXZ(-math.sqrt1_2, math.sqrt1_2);
   static const coordinate_frontTop =
-  Coordinate.ofYZ(-math.sqrt1_2, math.sqrt1_2);
+      Coordinate.ofYZ(-math.sqrt1_2, math.sqrt1_2);
   static const coordinate_frontRight =
-  Coordinate.ofXZ(math.sqrt1_2, math.sqrt1_2);
+      Coordinate.ofXZ(math.sqrt1_2, math.sqrt1_2);
   static const coordinate_frontBottom =
-  Coordinate.ofYZ(math.sqrt1_2, math.sqrt1_2);
+      Coordinate.ofYZ(math.sqrt1_2, math.sqrt1_2);
   static const coordinate_backLeft =
-  Coordinate.ofXZ(-math.sqrt1_2, -math.sqrt1_2);
+      Coordinate.ofXZ(-math.sqrt1_2, -math.sqrt1_2);
   static const coordinate_backTop =
-  Coordinate.ofYZ(-math.sqrt1_2, -math.sqrt1_2);
+      Coordinate.ofYZ(-math.sqrt1_2, -math.sqrt1_2);
   static const coordinate_backRight =
-  Coordinate.ofXZ(math.sqrt1_2, -math.sqrt1_2);
+      Coordinate.ofXZ(math.sqrt1_2, -math.sqrt1_2);
   static const coordinate_backBottom =
-  Coordinate.ofYZ(math.sqrt1_2, -math.sqrt1_2);
+      Coordinate.ofYZ(math.sqrt1_2, -math.sqrt1_2);
 
   static const coordinate_frontTopLeft = Coordinate(-DoubleExtension.sqrt1_3,
       -DoubleExtension.sqrt1_3, DoubleExtension.sqrt1_3);
@@ -242,27 +242,27 @@ enum Direction2DIn4 with Direction<Direction2DIn4> {
 
   @override
   Direction2DIn4 get flipped => switch (this) {
-    Direction2DIn4.left => Direction2DIn4.right,
-    Direction2DIn4.right => Direction2DIn4.left,
-    Direction2DIn4.top => Direction2DIn4.top,
-    Direction2DIn4.bottom => Direction2DIn4.bottom,
-  };
+        Direction2DIn4.left => Direction2DIn4.right,
+        Direction2DIn4.right => Direction2DIn4.left,
+        Direction2DIn4.top => Direction2DIn4.top,
+        Direction2DIn4.bottom => Direction2DIn4.bottom,
+      };
 
   @override
   Offset get toOffset => switch (this) {
-    Direction2DIn4.left => Direction.offset_left,
-    Direction2DIn4.right => Direction.offset_right,
-    Direction2DIn4.top => Direction.offset_top,
-    Direction2DIn4.bottom => Direction.offset_bottom,
-  };
+        Direction2DIn4.left => Direction.offset_left,
+        Direction2DIn4.right => Direction.offset_right,
+        Direction2DIn4.top => Direction.offset_top,
+        Direction2DIn4.bottom => Direction.offset_bottom,
+      };
 
   @override
   Coordinate get toCoordinate => switch (this) {
-    Direction2DIn4.left => Direction.coordinate_left,
-    Direction2DIn4.right => Direction.coordinate_right,
-    Direction2DIn4.top => Direction.coordinate_top,
-    Direction2DIn4.bottom => Direction.coordinate_bottom,
-  };
+        Direction2DIn4.left => Direction.coordinate_left,
+        Direction2DIn4.right => Direction.coordinate_right,
+        Direction2DIn4.top => Direction.coordinate_top,
+        Direction2DIn4.bottom => Direction.coordinate_bottom,
+      };
 }
 
 enum Direction2DIn8 with Direction<Direction2DIn8> {
@@ -277,88 +277,88 @@ enum Direction2DIn8 with Direction<Direction2DIn8> {
 
   @override
   Direction2DIn8 get flipped => switch (this) {
-    top => Direction2DIn8.bottom,
-    left => Direction2DIn8.right,
-    right => Direction2DIn8.left,
-    bottom => Direction2DIn8.top,
-    topLeft => Direction2DIn8.bottomRight,
-    topRight => Direction2DIn8.bottomLeft,
-    bottomLeft => Direction2DIn8.topRight,
-    bottomRight => Direction2DIn8.topLeft,
-  };
+        top => Direction2DIn8.bottom,
+        left => Direction2DIn8.right,
+        right => Direction2DIn8.left,
+        bottom => Direction2DIn8.top,
+        topLeft => Direction2DIn8.bottomRight,
+        topRight => Direction2DIn8.bottomLeft,
+        bottomLeft => Direction2DIn8.topRight,
+        bottomRight => Direction2DIn8.topLeft,
+      };
 
   @override
   Offset get toOffset => switch (this) {
-    top => Direction.offset_top,
-    left => Direction.offset_left,
-    right => Direction.offset_right,
-    bottom => Direction.offset_bottom,
-    topLeft => Direction.offset_topLeft,
-    topRight => Direction.offset_topRight,
-    bottomLeft => Direction.offset_bottomLeft,
-    bottomRight => Direction.offset_bottomRight,
-  };
+        top => Direction.offset_top,
+        left => Direction.offset_left,
+        right => Direction.offset_right,
+        bottom => Direction.offset_bottom,
+        topLeft => Direction.offset_topLeft,
+        topRight => Direction.offset_topRight,
+        bottomLeft => Direction.offset_bottomLeft,
+        bottomRight => Direction.offset_bottomRight,
+      };
 
   @override
   Coordinate get toCoordinate => switch (this) {
-    top => Direction.coordinate_top,
-    left => Direction.coordinate_left,
-    right => Direction.coordinate_right,
-    bottom => Direction.coordinate_bottom,
-    topLeft => Direction.coordinate_topLeft,
-    topRight => Direction.coordinate_topRight,
-    bottomLeft => Direction.coordinate_bottomLeft,
-    bottomRight => Direction.coordinate_bottomRight,
-  };
+        top => Direction.coordinate_top,
+        left => Direction.coordinate_left,
+        right => Direction.coordinate_right,
+        bottom => Direction.coordinate_bottom,
+        topLeft => Direction.coordinate_topLeft,
+        topRight => Direction.coordinate_topRight,
+        bottomLeft => Direction.coordinate_bottomLeft,
+        bottomRight => Direction.coordinate_bottomRight,
+      };
 
   Alignment get toAlignment => switch (this) {
-    top => Alignment.topCenter,
-    left => Alignment.centerLeft,
-    right => Alignment.centerRight,
-    bottom => Alignment.bottomCenter,
-    topLeft => Alignment.topLeft,
-    topRight => Alignment.topRight,
-    bottomLeft => Alignment.bottomLeft,
-    bottomRight => Alignment.bottomRight,
-  };
+        top => Alignment.topCenter,
+        left => Alignment.centerLeft,
+        right => Alignment.centerRight,
+        bottom => Alignment.bottomCenter,
+        topLeft => Alignment.topLeft,
+        topRight => Alignment.topRight,
+        bottomLeft => Alignment.bottomLeft,
+        bottomRight => Alignment.bottomRight,
+      };
 
   Extruding extruding([Offset? start]) {
     final o = start ?? toOffset;
     return switch (this) {
       Direction2DIn8.top => (width, length) => Rect.fromPoints(
-        o + Offset(width / 2, 0),
-        o + Offset(-width / 2, -length),
-      ),
+            o + Offset(width / 2, 0),
+            o + Offset(-width / 2, -length),
+          ),
       Direction2DIn8.bottom => (width, length) => Rect.fromPoints(
-        o + Offset(width / 2, 0),
-        o + Offset(-width / 2, length),
-      ),
+            o + Offset(width / 2, 0),
+            o + Offset(-width / 2, length),
+          ),
       Direction2DIn8.left => (width, length) => Rect.fromPoints(
-        o + Offset(0, width / 2),
-        o + Offset(-length, -width / 2),
-      ),
+            o + Offset(0, width / 2),
+            o + Offset(-length, -width / 2),
+          ),
       Direction2DIn8.right => (width, length) => Rect.fromPoints(
-        o + Offset(0, width / 2),
-        o + Offset(length, -width / 2),
-      ),
+            o + Offset(0, width / 2),
+            o + Offset(length, -width / 2),
+          ),
 
-    //
+      //
       Direction2DIn8.topLeft => (width, length) => Rect.fromPoints(
-        o,
-        o + Offset(-length, -length) * DoubleExtension.sqrt1_2,
-      ),
+            o,
+            o + Offset(-length, -length) * DoubleExtension.sqrt1_2,
+          ),
       Direction2DIn8.topRight => (width, length) => Rect.fromPoints(
-        o,
-        o + Offset(length, -length) * DoubleExtension.sqrt1_2,
-      ),
+            o,
+            o + Offset(length, -length) * DoubleExtension.sqrt1_2,
+          ),
       Direction2DIn8.bottomLeft => (width, length) => Rect.fromPoints(
-        o,
-        o + Offset(-length, length) * DoubleExtension.sqrt1_2,
-      ),
+            o,
+            o + Offset(-length, length) * DoubleExtension.sqrt1_2,
+          ),
       Direction2DIn8.bottomRight => (width, length) => Rect.fromPoints(
-        o,
-        o + Offset(length, length) * DoubleExtension.sqrt1_2,
-      ),
+            o,
+            o + Offset(length, length) * DoubleExtension.sqrt1_2,
+          ),
     };
   }
 
@@ -368,23 +368,25 @@ enum Direction2DIn8 with Direction<Direction2DIn8> {
   }
 
   Translator<double, Rect> sizingExtruding(
-      double width,
-      double length, [
-        Offset? start,
-      ]) {
+    double width,
+    double length, [
+    Offset? start,
+  ]) {
     final extruding = this.extruding(start);
     return (scale) => extruding(width, length * scale);
   }
 
   Translator<double, Rect> sizingExtrudingOfDimension(
-      double dimension, [
-        Offset? start,
-      ]) {
+    double dimension, [
+    Offset? start,
+  ]) {
     final extruding = this.extruding(start);
     return (scale) => extruding(dimension, dimension * scale);
   }
 }
 
+///
+///
 enum Direction3DIn6 with Direction<Direction3DIn6> {
   left,
   top,
@@ -395,32 +397,32 @@ enum Direction3DIn6 with Direction<Direction3DIn6> {
 
   @override
   Direction3DIn6 get flipped => switch (this) {
-    Direction3DIn6.left => Direction3DIn6.right,
-    Direction3DIn6.top => Direction3DIn6.bottom,
-    Direction3DIn6.right => Direction3DIn6.left,
-    Direction3DIn6.bottom => Direction3DIn6.top,
-    Direction3DIn6.front => Direction3DIn6.back,
-    Direction3DIn6.back => Direction3DIn6.front,
-  };
+        Direction3DIn6.left => Direction3DIn6.right,
+        Direction3DIn6.top => Direction3DIn6.bottom,
+        Direction3DIn6.right => Direction3DIn6.left,
+        Direction3DIn6.bottom => Direction3DIn6.top,
+        Direction3DIn6.front => Direction3DIn6.back,
+        Direction3DIn6.back => Direction3DIn6.front,
+      };
 
   @override
   Offset get toOffset => switch (this) {
-    Direction3DIn6.left => Direction.offset_left,
-    Direction3DIn6.top => Direction.offset_top,
-    Direction3DIn6.right => Direction.offset_right,
-    Direction3DIn6.bottom => Direction.offset_bottom,
-    _ => throw UnimplementedError(),
-  };
+        Direction3DIn6.left => Direction.offset_left,
+        Direction3DIn6.top => Direction.offset_top,
+        Direction3DIn6.right => Direction.offset_right,
+        Direction3DIn6.bottom => Direction.offset_bottom,
+        _ => throw UnimplementedError(),
+      };
 
   @override
   Coordinate get toCoordinate => switch (this) {
-    Direction3DIn6.left => Direction.coordinate_left,
-    Direction3DIn6.top => Direction.coordinate_top,
-    Direction3DIn6.right => Direction.coordinate_right,
-    Direction3DIn6.bottom => Direction.coordinate_bottom,
-    Direction3DIn6.front => Direction.coordinate_front,
-    Direction3DIn6.back => Direction.coordinate_back,
-  };
+        Direction3DIn6.left => Direction.coordinate_left,
+        Direction3DIn6.top => Direction.coordinate_top,
+        Direction3DIn6.right => Direction.coordinate_right,
+        Direction3DIn6.bottom => Direction.coordinate_bottom,
+        Direction3DIn6.front => Direction.coordinate_front,
+        Direction3DIn6.back => Direction.coordinate_back,
+      };
 
   ///
   /// The angle value belows are "[Matrix4] radian". see [Coordinate.fromDirection] for my "math radian".
@@ -462,37 +464,37 @@ enum Direction3DIn6 with Direction<Direction3DIn6> {
     Matrix4 instance() => Matrix4.identity();
     return initialRadian == Coordinate.zero
         ? switch (this) {
-      Direction3DIn6.front => Transform(
-        transform: instance(),
-        alignment: Alignment.center,
-        child: child,
-      ),
-      Direction3DIn6.back => Transform(
-        transform: instance()..translate(Vector3(0, 0, -zDeep)),
-        alignment: Alignment.center,
-        child: child,
-      ),
-      Direction3DIn6.left => Transform(
-        alignment: Alignment.centerLeft,
-        transform: instance()..rotateY(KRadian.angle_90),
-        child: child,
-      ),
-      Direction3DIn6.right => Transform(
-        alignment: Alignment.centerRight,
-        transform: instance()..rotateY(-KRadian.angle_90),
-        child: child,
-      ),
-      Direction3DIn6.top => Transform(
-        alignment: Alignment.topCenter,
-        transform: instance()..rotateX(-KRadian.angle_90),
-        child: child,
-      ),
-      Direction3DIn6.bottom => Transform(
-        alignment: Alignment.bottomCenter,
-        transform: instance()..rotateX(KRadian.angle_90),
-        child: child,
-      ),
-    }
+            Direction3DIn6.front => Transform(
+                transform: instance(),
+                alignment: Alignment.center,
+                child: child,
+              ),
+            Direction3DIn6.back => Transform(
+                transform: instance()..translate(Vector3(0, 0, -zDeep)),
+                alignment: Alignment.center,
+                child: child,
+              ),
+            Direction3DIn6.left => Transform(
+                alignment: Alignment.centerLeft,
+                transform: instance()..rotateY(KRadian.angle_90),
+                child: child,
+              ),
+            Direction3DIn6.right => Transform(
+                alignment: Alignment.centerRight,
+                transform: instance()..rotateY(-KRadian.angle_90),
+                child: child,
+              ),
+            Direction3DIn6.top => Transform(
+                alignment: Alignment.topCenter,
+                transform: instance()..rotateX(-KRadian.angle_90),
+                child: child,
+              ),
+            Direction3DIn6.bottom => Transform(
+                alignment: Alignment.bottomCenter,
+                transform: instance()..rotateX(KRadian.angle_90),
+                child: child,
+              ),
+          }
         : throw UnimplementedError();
   }
 }
@@ -515,48 +517,48 @@ enum Direction3DIn14 with Direction<Direction3DIn14> {
 
   @override
   Direction3DIn14 get flipped => switch (this) {
-    Direction3DIn14.left => Direction3DIn14.right,
-    Direction3DIn14.top => Direction3DIn14.bottom,
-    Direction3DIn14.right => Direction3DIn14.left,
-    Direction3DIn14.bottom => Direction3DIn14.top,
-    Direction3DIn14.front => Direction3DIn14.front,
-    Direction3DIn14.frontLeft => Direction3DIn14.frontLeft,
-    Direction3DIn14.frontTop => Direction3DIn14.frontTop,
-    Direction3DIn14.frontRight => Direction3DIn14.frontRight,
-    Direction3DIn14.frontBottom => Direction3DIn14.frontBottom,
-    Direction3DIn14.back => Direction3DIn14.back,
-    Direction3DIn14.backLeft => Direction3DIn14.backLeft,
-    Direction3DIn14.backTop => Direction3DIn14.backTop,
-    Direction3DIn14.backRight => Direction3DIn14.backRight,
-    Direction3DIn14.backBottom => Direction3DIn14.backBottom,
-  };
+        Direction3DIn14.left => Direction3DIn14.right,
+        Direction3DIn14.top => Direction3DIn14.bottom,
+        Direction3DIn14.right => Direction3DIn14.left,
+        Direction3DIn14.bottom => Direction3DIn14.top,
+        Direction3DIn14.front => Direction3DIn14.front,
+        Direction3DIn14.frontLeft => Direction3DIn14.frontLeft,
+        Direction3DIn14.frontTop => Direction3DIn14.frontTop,
+        Direction3DIn14.frontRight => Direction3DIn14.frontRight,
+        Direction3DIn14.frontBottom => Direction3DIn14.frontBottom,
+        Direction3DIn14.back => Direction3DIn14.back,
+        Direction3DIn14.backLeft => Direction3DIn14.backLeft,
+        Direction3DIn14.backTop => Direction3DIn14.backTop,
+        Direction3DIn14.backRight => Direction3DIn14.backRight,
+        Direction3DIn14.backBottom => Direction3DIn14.backBottom,
+      };
 
   @override
   Offset get toOffset => switch (this) {
-    Direction3DIn14.left => Direction.offset_left,
-    Direction3DIn14.top => Direction.offset_top,
-    Direction3DIn14.right => Direction.offset_right,
-    Direction3DIn14.bottom => Direction.offset_bottom,
-    _ => throw UnimplementedError(),
-  };
+        Direction3DIn14.left => Direction.offset_left,
+        Direction3DIn14.top => Direction.offset_top,
+        Direction3DIn14.right => Direction.offset_right,
+        Direction3DIn14.bottom => Direction.offset_bottom,
+        _ => throw UnimplementedError(),
+      };
 
   @override
   Coordinate get toCoordinate => switch (this) {
-    Direction3DIn14.left => Direction.coordinate_left,
-    Direction3DIn14.top => Direction.coordinate_top,
-    Direction3DIn14.right => Direction.coordinate_right,
-    Direction3DIn14.bottom => Direction.coordinate_bottom,
-    Direction3DIn14.front => Direction.coordinate_front,
-    Direction3DIn14.frontLeft => Direction.coordinate_frontLeft,
-    Direction3DIn14.frontTop => Direction.coordinate_frontTop,
-    Direction3DIn14.frontRight => Direction.coordinate_frontRight,
-    Direction3DIn14.frontBottom => Direction.coordinate_frontBottom,
-    Direction3DIn14.back => Direction.coordinate_back,
-    Direction3DIn14.backLeft => Direction.coordinate_backLeft,
-    Direction3DIn14.backTop => Direction.coordinate_backTop,
-    Direction3DIn14.backRight => Direction.coordinate_backRight,
-    Direction3DIn14.backBottom => Direction.coordinate_backBottom,
-  };
+        Direction3DIn14.left => Direction.coordinate_left,
+        Direction3DIn14.top => Direction.coordinate_top,
+        Direction3DIn14.right => Direction.coordinate_right,
+        Direction3DIn14.bottom => Direction.coordinate_bottom,
+        Direction3DIn14.front => Direction.coordinate_front,
+        Direction3DIn14.frontLeft => Direction.coordinate_frontLeft,
+        Direction3DIn14.frontTop => Direction.coordinate_frontTop,
+        Direction3DIn14.frontRight => Direction.coordinate_frontRight,
+        Direction3DIn14.frontBottom => Direction.coordinate_frontBottom,
+        Direction3DIn14.back => Direction.coordinate_back,
+        Direction3DIn14.backLeft => Direction.coordinate_backLeft,
+        Direction3DIn14.backTop => Direction.coordinate_backTop,
+        Direction3DIn14.backRight => Direction.coordinate_backRight,
+        Direction3DIn14.backBottom => Direction.coordinate_backBottom,
+      };
 }
 
 enum Direction3DIn22 {
@@ -564,23 +566,14 @@ enum Direction3DIn22 {
 }
 
 ///
+/// [Coordinate.cube],
+/// [Coordinate.ofX], [Coordinate.ofY], [Coordinate.ofZ]
+/// [Coordinate.ofXY], [Coordinate.ofYZ], [Coordinate.ofXZ]
+/// [Coordinate.zero], [Coordinate.one]
 ///
+/// [maxDistance],
+/// ...
 ///
-///
-///
-///
-///
-/// coordinate
-///
-///
-///
-///
-///
-///
-///
-///
-///
-
 class Coordinate extends Offset with _CoordinateBase {
   @override
   final double dz;
@@ -610,6 +603,7 @@ class Coordinate extends Offset with _CoordinateBase {
   const Coordinate.ofXZ(double dx, this.dz) : super(dx, 0);
 
   static const Coordinate zero = Coordinate.cube(0);
+  static const Coordinate one = Coordinate.cube(1);
 
   static Coordinate maxDistance(Coordinate a, Coordinate b) =>
       a.distance > b.distance ? a : b;
@@ -620,9 +614,8 @@ class Coordinate extends Offset with _CoordinateBase {
   /// x axis is [Direction3DIn6.left] -> [Direction3DIn6.right], radian start from [Direction3DIn6.back]
   /// y axis is [Direction3DIn6.front] -> [Direction3DIn6.back], radian start from [Direction3DIn6.left]
   /// z axis is [Direction3DIn6.bottom] -> [Direction3DIn6.top], radian start from [Direction3DIn6.right]
-  /// (see [Coordinate.fromDirection] for implementation)
   ///
-  /// to dart matrix4 coordinate system (see the comment over [_MationTransformBase] for detail):
+  /// to "dart coordinate system" ([Transform], [Matrix4], [Offset]], ...):
   /// x axis is [Direction3DIn6.left] -> [Direction3DIn6.right], radian start from [Direction3DIn6.back] ?
   /// y axis is [Direction3DIn6.top] -> [Direction3DIn6.bottom], radian start from [Direction3DIn6.left] ?
   /// z axis is [Direction3DIn6.front] -> [Direction3DIn6.back], radian start from [Direction3DIn6.right]
@@ -630,15 +623,18 @@ class Coordinate extends Offset with _CoordinateBase {
   ///
   /// See Also:
   ///   * [Offset.fromDirection], [Coordinate.fromDirection]
-  ///   * [KDirection], [KCoordinateDirection]
-  ///   * [_MationTransformBase], [MationTransform]
+  ///   * [Direction], [Direction3DIn6]
   ///
   static Coordinate transferToTransformOf(Coordinate radian) => Coordinate(
-    radian.dx,
-    -radian.dz,
-    -radian.dy,
-  );
+        radian.dx,
+        -radian.dz,
+        -radian.dy,
+      );
 
+  ///
+  /// [Coordinate.fromDirection] is implement in my coordinate system (see [transferToTransformOf]),
+  /// not "dart coordinate system" ([Transform], [Matrix4], [Offset]], ...)
+  ///
   factory Coordinate.fromDirection({
     required Coordinate direction,
     required double distance,
@@ -672,22 +668,22 @@ mixin _CoordinateBase on Offset {
   bool get hasNoXY => (dx == 0 && dy == 0);
 
   Coordinate get modulus360Angle => Coordinate(
-    dx % KRadian.angle_360,
-    dy % KRadian.angle_360,
-    dz % KRadian.angle_360,
-  );
+        dx % KRadian.angle_360,
+        dy % KRadian.angle_360,
+        dz % KRadian.angle_360,
+      );
 
   Coordinate get modulus180Angle => Coordinate(
-    dx % KRadian.angle_180,
-    dy % KRadian.angle_180,
-    dz % KRadian.angle_180,
-  );
+        dx % KRadian.angle_180,
+        dy % KRadian.angle_180,
+        dz % KRadian.angle_180,
+      );
 
   Coordinate get modulus90Angle => Coordinate(
-    dx % KRadian.angle_90,
-    dy % KRadian.angle_90,
-    dz % KRadian.angle_90,
-  );
+        dx % KRadian.angle_90,
+        dy % KRadian.angle_90,
+        dz % KRadian.angle_90,
+      );
 
   Coordinate get retainX => Coordinate(dx, 0, 0);
 
@@ -704,10 +700,10 @@ mixin _CoordinateBase on Offset {
   Coordinate get retainXZAsYX => Coordinate(dz, dx, 0);
 
   Coordinate get roundup => Coordinate(
-    dx.roundToDouble(),
-    dy.roundToDouble(),
-    dz.roundToDouble(),
-  );
+        dx.roundToDouble(),
+        dy.roundToDouble(),
+        dz.roundToDouble(),
+      );
 
   @override
   double get distanceSquared => super.distanceSquared + dz * dz;
@@ -739,31 +735,31 @@ mixin _CoordinateBase on Offset {
 
   @override
   Coordinate operator *(double operand) => Coordinate(
-    dx * operand,
-    dy * operand,
-    dz * operand,
-  );
+        dx * operand,
+        dy * operand,
+        dz * operand,
+      );
 
   @override
   Coordinate operator /(double operand) => Coordinate(
-    dx / operand,
-    dy / operand,
-    dz / operand,
-  );
+        dx / operand,
+        dy / operand,
+        dz / operand,
+      );
 
   @override
   Coordinate operator ~/(double operand) => Coordinate(
-    (dx ~/ operand).toDouble(),
-    (dy ~/ operand).toDouble(),
-    (dz ~/ operand).toDouble(),
-  );
+        (dx ~/ operand).toDouble(),
+        (dy ~/ operand).toDouble(),
+        (dz ~/ operand).toDouble(),
+      );
 
   @override
   Coordinate operator %(double operand) => Coordinate(
-    dx % operand,
-    dy % operand,
-    dz % operand,
-  );
+        dx % operand,
+        dy % operand,
+        dz % operand,
+      );
 
   @override
   bool operator <(covariant Coordinate other) =>
@@ -794,18 +790,18 @@ mixin _CoordinateBase on Offset {
 
   @override
   Coordinate scale(
-      double scaleX,
-      double scaleY, {
-        double scaleZ = 0,
-      }) =>
+    double scaleX,
+    double scaleY, {
+    double scaleZ = 0,
+  }) =>
       Coordinate(dx * scaleX, dy * scaleY, dz * scaleZ);
 
   @override
   Coordinate translate(
-      double translateX,
-      double translateY, {
-        double translateZ = 0,
-      }) =>
+    double translateX,
+    double translateY, {
+    double translateZ = 0,
+  }) =>
       Coordinate(
         dx + translateX,
         dy + translateY,
@@ -828,9 +824,9 @@ class Vector3D {
   Offset get toOffset => Offset.fromDirection(-direction.dy, distance);
 
   Coordinate get toCoordinate => Coordinate.fromDirection(
-    direction: direction,
-    distance: distance,
-  );
+        direction: direction,
+        distance: distance,
+      );
 
   Vector3D rotated(Coordinate d) => Vector3D(direction + d, distance);
 
@@ -859,4 +855,3 @@ class Curving extends Curve {
   @override
   double transformInternal(double t) => mapper(t);
 }
-

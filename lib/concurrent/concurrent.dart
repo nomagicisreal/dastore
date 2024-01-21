@@ -80,7 +80,7 @@ class CurveFR {
       : forward = curve,
         reverse = curve;
 
-  CurveFR.intervalFlip(double begin, double end, CurveFR curve)
+  CurveFR.intervalFlip(CurveFR curve, double begin, double end)
       : forward = Interval(begin, end, curve: curve.forward),
         reverse = Interval(begin, end, curve: curve.reverse);
 
@@ -377,7 +377,7 @@ extension FTimer on Timer {
     Iterable<MapEntry<Duration, VoidCallback>> children,
   ) =>
       Timer(duration, () {
-        children.hasElement ? _sequence(children) : null;
+        children.isNotEmpty ? _sequence(children) : null;
         listener();
       });
 
