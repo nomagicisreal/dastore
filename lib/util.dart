@@ -20,7 +20,7 @@
 /// [Generator], [Generator2D]
 /// [Extruding]
 ///
-/// [WidgetChildrenBuilder]
+/// [WidgetParentBuilder]
 /// [WidgetListBuilder]
 /// [TextFormFieldValidator]
 ///
@@ -79,7 +79,7 @@ typedef Generator2D<T> = T Function(int i, int j);
 typedef Differentiator<P, Q> = int Function(P p, Q q);
 typedef Extruding = Rect Function(double width, double height);
 
-typedef WidgetChildrenBuilder = Widget Function(
+typedef WidgetParentBuilder = Widget Function(
   BuildContext context,
   List<Widget> children,
 );
@@ -88,4 +88,3 @@ typedef WidgetListBuilder = List<Widget> Function(BuildContext context);
 typedef TextFormFieldValidator = FormFieldValidator<String> Function(
   String failedMessage,
 );
-

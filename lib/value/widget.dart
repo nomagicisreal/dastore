@@ -304,6 +304,10 @@ extension WWidgetBuilder on WidgetBuilder {
   static WidgetBuilder of(Widget child) => (_) => child;
   static List<WidgetBuilder> ofList(List<Widget> children) =>
       children.mapToList((child) => (_) => child);
+
+  static Widget none(BuildContext context) => WSizedBox.none;
+
+  static Widget noneAnimation(Animation animation, Widget child) => child;
 }
 
 extension WImageLoadingBuilder on ImageLoadingBuilder {

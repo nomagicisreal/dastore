@@ -15,9 +15,8 @@
 ///
 ///
 ///
+/// [FWidgetParentBuilder]
 /// [FTextFormFieldValidator]
-///
-///
 ///
 ///
 ///
@@ -189,9 +188,9 @@ extension FPredicatorTernaryCombiner on Combiner {
 ///
 extension FComparatorList<C extends Comparable> on Comparator<List<C>> {
   static Comparator<List<C>> accordinglyUntil<C extends Comparable>(
-      int index, [
-        Comparator<C>? comparator,
-      ]) {
+    int index, [
+    Comparator<C>? comparator,
+  ]) {
     final compare = comparator ?? (C a, C b) => a.compareTo(b);
     return (a, b) {
       int comparing(int i) {
@@ -402,6 +401,7 @@ extension FReducerNum<N extends num> on Reducer<N> {
   static const Reducer<int> intAdding = _intAdding;
 
   static double _doubleAdding(double v1, double v2) => v1 + v2;
+
   static int _intAdding(int v1, int v2) => v1 + v2;
 }
 
@@ -412,6 +412,11 @@ extension FReducerNum<N extends num> on Reducer<N> {
 ///
 ///
 ///
+
+extension FWidgetParentBuilder on WidgetParentBuilder {
+  WidgetBuilder builderFrom(Iterable<WidgetBuilder> children) =>
+      (context) => this(context, [...children.map((build) => build(context))]);
+}
 
 extension FTextFormFieldValidator on TextFormFieldValidator {
   static FormFieldValidator<String> validateNullOrEmpty(

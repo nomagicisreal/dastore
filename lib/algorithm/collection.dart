@@ -784,6 +784,9 @@ extension IterableExtension<I> on Iterable<I> {
   }) =>
       reduceTo(reducer, translator);
 
+  String reduceToString([String separator = '\n']) =>
+      fold('', (s1, s2) => '$s1$separator$s2');
+
   S reduceTogether<S>(
     Iterable<S> another,
     Fusionor<S, S, S, S> reducer,
