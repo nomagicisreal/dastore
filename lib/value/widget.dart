@@ -39,7 +39,6 @@
 ///
 part of dastore;
 
-
 ///
 ///
 ///
@@ -302,6 +301,7 @@ extension WColoredBox on ColoredBox {
 
 extension WWidgetBuilder on WidgetBuilder {
   static WidgetBuilder of(Widget child) => (_) => child;
+
   static List<WidgetBuilder> ofList(List<Widget> children) =>
       children.mapToList((child) => (_) => child);
 
@@ -562,7 +562,7 @@ extension FBorderBox on BoxBorder {
 // outlined border
 extension FBorderOutlined on OutlinedBorder {
   static StarBorder star({
-    required BorderSide side,
+    BorderSide side = BorderSide.none,
     double points = 5,
     double innerRadiusRatio = 0.4,
     double pointRounding = 0,
@@ -581,7 +581,7 @@ extension FBorderOutlined on OutlinedBorder {
       );
 
   static LinearBorder linear({
-    required BorderSide side,
+    BorderSide side = BorderSide.none,
     LinearBorderEdge? start,
     LinearBorderEdge? end,
     LinearBorderEdge? top,
@@ -595,11 +595,12 @@ extension FBorderOutlined on OutlinedBorder {
         bottom: bottom,
       );
 
-  static StadiumBorder stadium(BorderSide side) => StadiumBorder(side: side);
+  static StadiumBorder stadium([BorderSide side = BorderSide.none]) =>
+      StadiumBorder(side: side);
 
   static BeveledRectangleBorder beveledRectangle({
-    required BorderSide side,
-    BorderRadius borderRadius = BorderRadius.zero,
+    BorderSide side = BorderSide.none,
+    required BorderRadius borderRadius,
   }) =>
       BeveledRectangleBorder(
         side: side,
@@ -607,8 +608,8 @@ extension FBorderOutlined on OutlinedBorder {
       );
 
   static RoundedRectangleBorder roundedRectangle({
-    required BorderSide side,
-    BorderRadius borderRadius = BorderRadius.zero,
+    BorderSide side = BorderSide.none,
+    required BorderRadius borderRadius,
   }) =>
       RoundedRectangleBorder(
         side: side,
@@ -616,19 +617,19 @@ extension FBorderOutlined on OutlinedBorder {
       );
 
   static ContinuousRectangleBorder continuousRectangle({
-    required BorderSide side,
-    BorderRadius borderRadius = BorderRadius.zero,
+    BorderSide side = BorderSide.none,
+    required BorderRadius borderRadius,
   }) =>
       ContinuousRectangleBorder(side: side, borderRadius: borderRadius);
 
   static CircleBorder circle({
-    required BorderSide side,
+    BorderSide side = BorderSide.none,
     double eccentricity = 0.0,
   }) =>
       CircleBorder(side: side, eccentricity: eccentricity);
 
   static CircleBorder oval({
-    required BorderSide side,
+    BorderSide side = BorderSide.none,
     double eccentricity = 1.0,
   }) =>
       OvalBorder(side: side, eccentricity: eccentricity);
@@ -638,8 +639,8 @@ extension FBorderOutlined on OutlinedBorder {
 extension FBorderInput on InputBorder {
   static OutlineInputBorder outline({
     BorderSide borderSide = const BorderSide(),
-    BorderRadius borderRadius = KBorderRadius.allCircular_4,
     double gapPadding = 4.0,
+    required BorderRadius borderRadius,
   }) =>
       OutlineInputBorder(
         borderSide: borderSide,
@@ -650,8 +651,8 @@ extension FBorderInput on InputBorder {
   static OutlineInputBorder outlineSolidInside({
     Color color = Colors.blueGrey,
     double width = 1.5,
-    BorderRadius borderRadius = KBorderRadius.allCircular_4,
     double gapPadding = 4.0,
+    required BorderRadius borderRadius,
   }) =>
       OutlineInputBorder(
         borderSide: FBorderSide.solidInside(

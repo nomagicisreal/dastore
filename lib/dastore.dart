@@ -9,7 +9,6 @@ import 'package:vector_math/vector_math.dart' show Vector3;
 
 part 'util.dart';
 part 'algorithm/collection.dart';
-part 'algorithm/combination.dart';
 part 'algorithm/math.dart';
 part 'concurrent/concurrent.dart';
 part 'element/mix.dart';
@@ -18,8 +17,6 @@ part 'value/constant.dart';
 part 'value/extension.dart';
 part 'value/function.dart';
 part 'value/widget.dart';
-// part 'algorithm/algorithm.dart';
-// part 'algorithm/algorithm_tempt.dart';
 
 
 ///

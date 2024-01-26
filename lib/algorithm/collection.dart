@@ -90,6 +90,9 @@ extension DoubleExtension on double {
 
   bool get isNearlyInt => (ceil() - this) <= 0.01;
 
+  double get clampPositive => clampDouble(this, 0.0, double.infinity);
+  double get clampNegative => clampDouble(this, double.negativeInfinity, 0);
+
   ///
   /// infinity usages
   ///
@@ -344,7 +347,6 @@ extension IntExtension on int {
     return floorOf(n).first;
   }
 
-
   ///
   /// Generally, these methods return the possible partition of an integer [m],
   /// [partition]
@@ -372,8 +374,8 @@ extension IntExtension on int {
   ///
   static int partition(int m, int n) {
     assert(
-    m.isPositiveOrZero && n <= m,
-    'it is impossible to partition $m into $n group',
+      m.isPositiveOrZero && n <= m,
+      'it is impossible to partition $m into $n group',
     );
     return _partition(m, n, space: _partitionSpace<int>(m, n: n));
   }
@@ -396,7 +398,7 @@ extension IntExtension on int {
     final pSpace = _partitionSpace<int>(m);
     return Iterable.generate(
       m,
-          (i) => _partition<int>(m, i + 1, space: pSpace),
+      (i) => _partition<int>(m, i + 1, space: pSpace),
     ).reduce((p1, p2) => p1 + p2);
   }
 
@@ -414,8 +416,8 @@ extension IntExtension on int {
   ///
   static List<List<int>> partitionGroups(int m, int n) {
     assert(
-    m.isPositiveOrZero && n <= m,
-    'it is impossible to partition $m into $n group',
+      m.isPositiveOrZero && n <= m,
+      'it is impossible to partition $m into $n group',
     );
     final groups = _partition(
       m,
@@ -480,83 +482,83 @@ extension IntExtension on int {
   ///
   ///
   static P _partition<P>(
-      int m,
-      int n, {
-        required List<List<P>> space,
-      }) =>
+    int m,
+    int n, {
+    required List<List<P>> space,
+  }) =>
       switch (space) {
         List<List<int>>() => () {
-          final partitionSpace = space as List<List<int>>;
-          late final Reducer<int> elementOf;
+            final partitionSpace = space as List<List<int>>;
+            late final Reducer<int> elementOf;
 
-          int instancesOf(int i, int j) {
-            int sum = 1;
-            _partitionSearchOnFloor<int>(
-              i,
-              j,
-              space: partitionSpace,
-              elementOf: elementOf,
-              predicate: (p) => p == 1,
-              consume: (p) => sum += p,
-              trailing: (_) => sum++,
+            int instancesOf(int i, int j) {
+              int sum = 1;
+              _partitionSearchOnFloor<int>(
+                i,
+                j,
+                space: partitionSpace,
+                elementOf: elementOf,
+                predicate: (p) => p == 1,
+                consume: (p) => sum += p,
+                trailing: (_) => sum++,
+              );
+              return sum;
+            }
+
+            elementOf = _partitionElementGenerator(
+              atFirst: FGenerator.fill2D(1),
+              atLast: FGenerator.fill2D(1),
+              atLastPrevious: FGenerator.fill2D(1),
+              instancesOf: instancesOf,
             );
-            return sum;
-          }
 
-          elementOf = _partitionElementGenerator(
-            atFirst: FGenerator2D.of(1),
-            atLast: FGenerator2D.of(1),
-            atLastPrevious: FGenerator2D.of(1),
-            instancesOf: instancesOf,
-          );
-
-          return elementOf(m, n);
-        }(),
+            return elementOf(m, n);
+          }(),
         List<List<Iterable<List<int>>>>() => () {
-          final partitionSpace = space as List<List<Iterable<List<int>>>>;
-          late final Generator2D<Iterable<List<int>>> elementOf;
+            final partitionSpace = space as List<List<Iterable<List<int>>>>;
+            late final Generator2D<Iterable<List<int>>> elementOf;
 
-          print('($m, $n)');
+            print('($m, $n)');
 
-          List<int> firstOf(int n) => [n];
-          List<int> lastOf(int n) => List.filled(n, 1, growable: true);
-          List<int> lastPreviousOf(int n) => [2, ...List.filled(n - 2, 1)];
+            List<int> firstOf(int n) => [n];
+            List<int> lastOf(int n) => List.filled(n, 1, growable: true);
+            List<int> lastPreviousOf(int n) => [2, ...List.filled(n - 2, 1)];
 
-          Iterable<List<int>> instancesOf(int i, int j) {
-            final instances = [firstOf(i)];
-            _partitionSearchOnFloor<Iterable<List<int>>>(
-              i,
-              j,
-              space: partitionSpace,
-              elementOf: elementOf,
-              predicate: (p) => p.isEmpty,
-              consume: (p) => instances.addAll(p),
-              trailing: (current) => instances.add(
-                (current == i ? lastOf(i) : lastPreviousOf(i)),
-              ),
+            Iterable<List<int>> instancesOf(int i, int j) {
+              final instances = [firstOf(i)];
+              _partitionSearchOnFloor<Iterable<List<int>>>(
+                i,
+                j,
+                space: partitionSpace,
+                elementOf: elementOf,
+                predicate: (p) => p.isEmpty,
+                consume: (p) => instances.addAll(p),
+                trailing: (current) => instances.add(
+                  (current == i ? lastOf(i) : lastPreviousOf(i)),
+                ),
+              );
+              return instances;
+            }
+
+            elementOf = _partitionElementGenerator(
+              atFirst: (i, j) => [firstOf(i)],
+              atLast: (i, j) => [lastOf(j)],
+              atLastPrevious: (i, j) => [lastPreviousOf(j)],
+              instancesOf: (i, j) {
+                final instances = instancesOf(i, j);
+                final result = <List<int>>[];
+                for (var instance in instances) {
+                  result.add([
+                    ...instance.map((element) => element + 1),
+                    ...Iterable.generate(j - instance.length, (_) => 1),
+                  ]);
+                }
+                return result;
+              },
             );
-            return instances;
-          }
 
-          elementOf = _partitionElementGenerator(
-            atFirst: (i, j) => [firstOf(i)],
-            atLast: (i, j) => [lastOf(j)],
-            atLastPrevious: (i, j) => [lastPreviousOf(j)],
-            instancesOf: (i, j) {
-              final instances = instancesOf(i, j);
-              final result = <List<int>>[];
-              for (var instance in instances) {
-                result.add([
-                  ...instance.map((element) => element + 1),
-                  ...Iterable.generate(j - instance.length, (_) => 1),
-                ]);
-              }
-              return result;
-            },
-          );
-
-          return elementOf(m, n);
-        }(),
+            return elementOf(m, n);
+          }(),
         _ => throw UnimplementedError(),
       } as P;
 
@@ -577,10 +579,10 @@ extension IntExtension on int {
     final Generator<P> generator = P == int
         ? (_) => 1 as P
         : (P == List<List<int>>)
-        ? (_) => <List<int>>[] as P
-        : throw UnimplementedError(
-      'generic type must be int or Iterable<List<int>>, current: $P',
-    );
+            ? (_) => <List<int>>[] as P
+            : throw UnimplementedError(
+                'generic type must be int or Iterable<List<int>>, current: $P',
+              );
     return List.generate(
       spaceRow,
       n == null
@@ -597,7 +599,7 @@ extension IntExtension on int {
     required Generator2D<T> atLastPrevious,
     required Generator2D<T> instancesOf,
   }) =>
-          (i, j) {
+      (i, j) {
         if (j == 1) return atFirst(i, j);
         if (j == i) return atLast(i, j);
         if (j == i - 1) return atLastPrevious(i, j);
@@ -607,20 +609,20 @@ extension IntExtension on int {
   ///
   ///
   static void _partitionSearchOnFloor<P>(
-      int i,
-      int j, {
-        required List<List<P>> space,
-        required Generator2D<P> elementOf,
-        required Predicator<P> predicate,
-        required void Function(P instance) consume,
-        required void Function(int current) trailing,
-      }) {
+    int i,
+    int j, {
+    required List<List<P>> space,
+    required Generator2D<P> elementOf,
+    required Predicator<P> predicate,
+    required void Function(P instance) consume,
+    required void Function(int current) trailing,
+  }) {
     final min = math.min(i, j);
     final bound = min == i
         ? math.max(1, min - 2)
         : min == i - 1
-        ? min - 1
-        : min;
+            ? min - 1
+            : min;
     for (var k = 2; k <= bound; k++) {
       P p = space[i - 4][k - 2];
       if (predicate(p)) p = space[i - 4][k - 2] = elementOf(i, k);
@@ -639,10 +641,15 @@ extension IntExtension on int {
 /// instance getter and methods
 /// [notContains]
 /// [search]
-/// [iteratingWith]
-/// [everyCompare], [everyIsEqual], [anyNotEqual]
+/// [iteratingAllWith]
+///
+/// [anyInside], [anyIsEqual], [anyIsDifferent], [anyWithIndex],
+/// [anyElementWith], [anyElementIsEqualWith], [anyElementIsDifferentWith]
+/// [everyIsEqual], [everyIsDifferent], [everyWithIndex],
+/// [everyElementsWith], [everyElementsAreEqualWith], [everyElementsAreDifferentWith]
+///
 /// [foldWithIndex], [foldWith]
-/// [reduceWithIndex], [reduceWith], [reduceTo], [reduceToNum], [reduceTogether]
+/// [reduceWithIndex], [reduceWith], [reduceTo], [reduceToNum], [reduceToString], [reduceTogether]
 /// [expandWithIndex], [expandWith], [flat], [mapToList]
 ///
 /// [chunk]
@@ -675,7 +682,7 @@ extension IterableExtension<I> on Iterable<I> {
     }
   }
 
-  void iteratingWith<S>(Iterable<S> another, Absorber<I, S> absorber) {
+  void iteratingAllWith<S>(Iterable<S> another, Absorber<I, S> absorber) {
     assert(length == another.length, 'length must be equal');
     final iterator = this.iterator;
     final iteratorAnother = another.iterator;
@@ -684,7 +691,70 @@ extension IterableExtension<I> on Iterable<I> {
     }
   }
 
-  bool everyCompare<P>(
+  ///
+  /// any
+  ///
+  bool anyInside(Comparator<I> compare, {int expect = 0}) {
+    final iterator = this.iterator..moveNext();
+    final List<I> list = [iterator.current];
+    while (iterator.moveNext()) {
+      final current = iterator.current;
+      if (list.any((e) => compare(e, current) == expect)) return true;
+      list.add(current);
+    }
+    return false;
+  }
+
+  bool get anyIsEqual => anyInside((a, b) => a == b ? 0 : -1, expect: 0);
+
+  bool get anyIsDifferent => anyInside((a, b) => a != b ? 0 : -1, expect: 0);
+
+  bool anyWithIndex(Checker<I> checker, {int start = 0}) {
+    int index = start - 1;
+    return any((element) => checker(++index, element));
+  }
+
+  bool anyElementWith<P>(
+    Iterable<P> another,
+    Differentiator<I, P> differentiate, {
+    int expect = 0,
+  }) {
+    assert(length == another.length);
+    final i1 = iterator;
+    final i2 = another.iterator;
+    while (i1.moveNext() && i2.moveNext()) {
+      if (differentiate(i1.current, i2.current) == expect) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool anyElementIsEqualWith(Iterable<I> another) => anyElementWith(
+        another,
+        (v1, v2) => v1 == v2 ? 0 : -1,
+        expect: 0,
+      );
+
+  bool anyElementIsDifferentWith(Iterable<I> another) => anyElementWith(
+        another,
+        (v1, v2) => v1 != v2 ? 0 : -1,
+        expect: 0,
+      );
+
+  ///
+  /// every
+  ///
+  bool get everyIsEqual => !anyIsDifferent;
+
+  bool get everyIsDifferent => !anyIsEqual;
+
+  bool everyWithIndex(Checker<I> checker, {int start = 0}) {
+    int index = start - 1;
+    return every((element) => checker(++index, element));
+  }
+
+  bool everyElementsWith<P>(
     Iterable<P> another,
     Differentiator<I, P> differentiate, {
     int expect = 0,
@@ -700,18 +770,11 @@ extension IterableExtension<I> on Iterable<I> {
     return true;
   }
 
-  bool everyWithIndex(Checker<I> checker, {int start = 0}) {
-    int index = start - 1;
-    return every((element) => checker(element, ++index));
-  }
+  bool everyElementsAreEqualWith(Iterable<I> another) =>
+      !anyElementIsDifferentWith(another);
 
-  bool everyIsEqual(Iterable<I> another) => everyCompare(
-        another,
-        (v1, v2) => v1 == v2 ? 0 : -1,
-        expect: 0,
-      );
-
-  bool anyNotEqual(Iterable<I> another) => !everyIsEqual(another);
+  bool everyElementsAreDifferentWith(Iterable<I> another) =>
+      !anyElementIsEqualWith(another);
 
   ///
   /// fold
@@ -734,7 +797,7 @@ extension IterableExtension<I> on Iterable<I> {
     Fusionor<S, I, P, S> fusionor,
   ) {
     var value = initialValue;
-    iteratingWith(
+    iteratingAllWith(
       another,
       (e, eAnother) => value = fusionor(value, e, eAnother),
     );
@@ -856,7 +919,7 @@ extension IterableExtension<I> on Iterable<I> {
     for (var item in this) {
       map.update(
         translator(item),
-            (value) => value..add(item),
+        (value) => value..add(item),
         ifAbsent: () => [item],
       );
     }
@@ -914,7 +977,7 @@ extension IterableTimerExtension on Iterable<Timer> {
 ///
 /// [lengths]
 /// [toStringPadLeft], [mapToStringJoin]
-/// [isSizeEqual]
+/// [everyElementsLengthAreEqualWith]
 /// [foldWith2D]
 ///
 extension IterableIterableExtension<I> on Iterable<Iterable<I>> {
@@ -930,9 +993,9 @@ extension IterableIterableExtension<I> on Iterable<Iterable<I>> {
   ]) =>
       map(mapper ?? (e) => e.toString()).join(separator);
 
-  bool isSizeEqual<P>(Iterable<Iterable<P>> another) =>
+  bool everyElementsLengthAreEqualWith<P>(Iterable<Iterable<P>> another) =>
       length == another.length &&
-      everyCompare(
+      everyElementsWith(
         another,
         (v1, v2) => v1.length == v2.length ? 0 : -1,
         expect: 0,
@@ -943,7 +1006,7 @@ extension IterableIterableExtension<I> on Iterable<Iterable<I>> {
     S initialValue,
     Fusionor<S, I, P, S> fusionor,
   ) {
-    assert(isSizeEqual(another));
+    assert(everyElementsLengthAreEqualWith(another));
     return foldWith(
       another,
       initialValue,
@@ -1125,7 +1188,7 @@ extension ListExtension<T> on List<T> {
   List<T> get reversedExceptFirst {
     final length = this.length - 1;
     final result = <T>[first];
-    for (var i = length ; i > 0 ; i--) {
+    for (var i = length; i > 0; i--) {
       result.add(this[i]);
     }
     return result;
@@ -1411,10 +1474,10 @@ extension ListListExtension<T> on List<List<T>> {
 
 extension ListListComparableExtension<C extends Comparable> on List<List<C>> {
   void orderByElementFirst([Comparator<C>? comparator]) => sort(
-    comparator != null
-        ? (a, b) => comparator.call(a.first, b.first)
-        : (a, b) => b.first.compareTo(a.first),
-  );
+        comparator != null
+            ? (a, b) => comparator.call(a.first, b.first)
+            : (a, b) => b.first.compareTo(a.first),
+      );
 }
 
 extension ListSetExtension<I> on List<Set<I>> {

@@ -18,7 +18,7 @@
 ///
 /// [Predicator], [PredicatorTernary]
 /// [Generator], [Generator2D]
-/// [Extruding]
+/// [Extruding2D]
 ///
 /// [WidgetParentBuilder]
 /// [WidgetListBuilder]
@@ -44,12 +44,6 @@ const VoidCallback kVoidCallback = _voidCallback;
 
 void _voidCallback() {}
 
-double clampDoublePositive(double value) => clampDouble(
-      value,
-      0.0,
-      double.infinity,
-    );
-
 typedef Supplier<T> = T Function();
 typedef Consumer<T> = void Function(T value);
 typedef Absorber<A, B> = void Function(A a, B b);
@@ -70,14 +64,15 @@ typedef Sequencer<R, S, I> = Translator<int, R> Function(
 // typedef Conductor<T> = void Function(T a, T b);
 
 typedef Predicator<T> = bool Function(T a);
-typedef PredicatorTernary<T> = bool? Function(T value);
-typedef Checker<T> = bool Function(T value, int index);
+typedef PredicateCombiner<T> = bool Function(T v1, T v2);
+typedef Checker<T> = bool Function(int index, T value);
 typedef Generator<T> = T Function(int index);
+typedef GeneratorTranslator<T, S> = S Function(int index, T value);
 typedef GeneratorFolder<P, Q, S> = S Function(int index, P p, Q q);
 typedef GeneratorReducer<T> = T Function(int index, T v1, T v2);
 typedef Generator2D<T> = T Function(int i, int j);
 typedef Differentiator<P, Q> = int Function(P p, Q q);
-typedef Extruding = Rect Function(double width, double height);
+typedef Extruding2D = Rect Function(double width, double height);
 
 typedef WidgetParentBuilder = Widget Function(
   BuildContext context,

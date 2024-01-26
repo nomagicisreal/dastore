@@ -4,26 +4,26 @@
 ///
 /// [Operator]
 ///
-///
 /// [Direction]
-///   [Direction2DIn4], [Direction2DIn8],
-///   [Direction3DIn6], [Direction3DIn14], [Direction3DIn22]
+///   [Direction2D]
+///     [Direction2DIn4]
+///     [Direction2DIn8]
+///   [Direction3D]
+///     [Direction3DIn6]
+///     [Direction3DIn14]
+///     [Direction3DIn22]
 ///
 ///
 /// [Coordinate]
-///   * [_CoordinateBase]
+/// [CoordinateRadian]
 ///
 /// [Vector3D]
 ///
+/// [CubicOffset]
+///
 /// [Curving]
 ///
-///
-///
-///
-///
-///
-///
-///
+/// [Combination]
 ///
 ///
 ///
@@ -157,7 +157,7 @@ enum Operator {
 
 ///
 ///
-base mixin Direction<D> {
+sealed class Direction<D> {
   D get flipped;
 
   Offset get toOffset;
@@ -234,7 +234,13 @@ base mixin Direction<D> {
       DoubleExtension.sqrt1_3, -DoubleExtension.sqrt1_3);
 }
 
-enum Direction2DIn4 with Direction<Direction2DIn4> {
+sealed class Direction2D<D extends Direction2D<D>> implements Direction<D> {
+  Alignment get toAlignment;
+
+  Offset di(Rect rect);
+}
+
+enum Direction2DIn4 implements Direction2D<Direction2DIn4> {
   left,
   right,
   top,
@@ -248,31 +254,34 @@ enum Direction2DIn4 with Direction<Direction2DIn4> {
         Direction2DIn4.bottom => Direction2DIn4.bottom,
       };
 
-  @override
-  Offset get toOffset => switch (this) {
-        Direction2DIn4.left => Direction.offset_left,
-        Direction2DIn4.right => Direction.offset_right,
-        Direction2DIn4.top => Direction.offset_top,
-        Direction2DIn4.bottom => Direction.offset_bottom,
+  Direction2DIn8 get toDirection8 => switch (this) {
+        Direction2DIn4.left => Direction2DIn8.left,
+        Direction2DIn4.top => Direction2DIn8.top,
+        Direction2DIn4.right => Direction2DIn8.right,
+        Direction2DIn4.bottom => Direction2DIn8.bottom,
       };
 
   @override
-  Coordinate get toCoordinate => switch (this) {
-        Direction2DIn4.left => Direction.coordinate_left,
-        Direction2DIn4.right => Direction.coordinate_right,
-        Direction2DIn4.top => Direction.coordinate_top,
-        Direction2DIn4.bottom => Direction.coordinate_bottom,
-      };
+  Offset get toOffset => toDirection8.toOffset;
+
+  @override
+  Coordinate get toCoordinate => toDirection8.toCoordinate;
+
+  @override
+  Alignment get toAlignment => toDirection8.toAlignment;
+
+  @override
+  Offset di(Rect rect) => toDirection8.di(rect);
 }
 
-enum Direction2DIn8 with Direction<Direction2DIn8> {
-  topLeft,
+enum Direction2DIn8 implements Direction2D<Direction2DIn8> {
   top,
-  topRight,
   left,
   right,
-  bottomLeft,
   bottom,
+  topLeft,
+  topRight,
+  bottomLeft,
   bottomRight;
 
   @override
@@ -311,6 +320,7 @@ enum Direction2DIn8 with Direction<Direction2DIn8> {
         bottomRight => Direction.coordinate_bottomRight,
       };
 
+  @override
   Alignment get toAlignment => switch (this) {
         top => Alignment.topCenter,
         left => Alignment.centerLeft,
@@ -322,72 +332,47 @@ enum Direction2DIn8 with Direction<Direction2DIn8> {
         bottomRight => Alignment.bottomRight,
       };
 
-  Extruding extruding([Offset? start]) {
-    final o = start ?? toOffset;
-    return switch (this) {
-      Direction2DIn8.top => (width, length) => Rect.fromPoints(
-            o + Offset(width / 2, 0),
-            o + Offset(-width / 2, -length),
-          ),
-      Direction2DIn8.bottom => (width, length) => Rect.fromPoints(
-            o + Offset(width / 2, 0),
-            o + Offset(-width / 2, length),
-          ),
-      Direction2DIn8.left => (width, length) => Rect.fromPoints(
-            o + Offset(0, width / 2),
-            o + Offset(-length, -width / 2),
-          ),
-      Direction2DIn8.right => (width, length) => Rect.fromPoints(
-            o + Offset(0, width / 2),
-            o + Offset(length, -width / 2),
-          ),
+  @override
+  Offset di(Rect rect) => switch (this) {
+        Direction2DIn8.top => rect.topCenter,
+        Direction2DIn8.left => rect.centerLeft,
+        Direction2DIn8.right => rect.centerRight,
+        Direction2DIn8.bottom => rect.bottomCenter,
+        Direction2DIn8.topLeft => rect.topLeft,
+        Direction2DIn8.topRight => rect.topRight,
+        Direction2DIn8.bottomLeft => rect.bottomLeft,
+        Direction2DIn8.bottomRight => rect.bottomRight,
+      };
 
-      //
-      Direction2DIn8.topLeft => (width, length) => Rect.fromPoints(
-            o,
-            o + Offset(-length, -length) * DoubleExtension.sqrt1_2,
-          ),
-      Direction2DIn8.topRight => (width, length) => Rect.fromPoints(
-            o,
-            o + Offset(length, -length) * DoubleExtension.sqrt1_2,
-          ),
-      Direction2DIn8.bottomLeft => (width, length) => Rect.fromPoints(
-            o,
-            o + Offset(-length, length) * DoubleExtension.sqrt1_2,
-          ),
-      Direction2DIn8.bottomRight => (width, length) => Rect.fromPoints(
-            o,
-            o + Offset(length, length) * DoubleExtension.sqrt1_2,
-          ),
-    };
-  }
+  bool get isDiagonal => switch (this) {
+        Direction2DIn8.left ||
+        Direction2DIn8.top ||
+        Direction2DIn8.right ||
+        Direction2DIn8.bottom =>
+          false,
+        Direction2DIn8.topLeft ||
+        Direction2DIn8.topRight ||
+        Direction2DIn8.bottomLeft ||
+        Direction2DIn8.bottomRight =>
+          true,
+      };
 
-  Translator<double, Rect> extrudingOfWidth(double width, [Offset? start]) {
-    final extruding = this.extruding(start);
-    return (scale) => extruding(width, scale);
-  }
-
-  Translator<double, Rect> sizingExtruding(
-    double width,
-    double length, [
-    Offset? start,
-  ]) {
-    final extruding = this.extruding(start);
-    return (scale) => extruding(width, length * scale);
-  }
-
-  Translator<double, Rect> sizingExtrudingOfDimension(
-    double dimension, [
-    Offset? start,
-  ]) {
-    final extruding = this.extruding(start);
-    return (scale) => extruding(dimension, dimension * scale);
-  }
+  double get scaleOnGrid => isDiagonal ? DoubleExtension.sqrt2 : 1;
 }
 
+sealed class Direction3D<D extends Direction3D<D>> implements Direction<D> {}
+
 ///
 ///
-enum Direction3DIn6 with Direction<Direction3DIn6> {
+///
+/// [Direction3DIn6], [Direction3DIn14], [Direction3DIn22]
+///
+///
+///
+
+///
+///
+enum Direction3DIn6 implements Direction3D<Direction3DIn6> {
   left,
   top,
   right,
@@ -499,7 +484,7 @@ enum Direction3DIn6 with Direction<Direction3DIn6> {
   }
 }
 
-enum Direction3DIn14 with Direction<Direction3DIn14> {
+enum Direction3DIn14 implements Direction3D<Direction3DIn14> {
   left,
   top,
   right,
@@ -559,105 +544,49 @@ enum Direction3DIn14 with Direction<Direction3DIn14> {
         Direction3DIn14.backRight => Direction.coordinate_backRight,
         Direction3DIn14.backBottom => Direction.coordinate_backBottom,
       };
+
+  double get scaleOnGrid => switch (this) {
+        Direction3DIn14.left ||
+        Direction3DIn14.top ||
+        Direction3DIn14.right ||
+        Direction3DIn14.bottom ||
+        Direction3DIn14.front ||
+        Direction3DIn14.back =>
+          1,
+        Direction3DIn14.frontLeft ||
+        Direction3DIn14.frontTop ||
+        Direction3DIn14.frontRight ||
+        Direction3DIn14.frontBottom ||
+        Direction3DIn14.backLeft ||
+        Direction3DIn14.backTop ||
+        Direction3DIn14.backRight ||
+        Direction3DIn14.backBottom =>
+          DoubleExtension.sqrt2,
+      };
 }
 
-enum Direction3DIn22 {
-  top;
-}
+// enum Direction3DIn22 implements Direction3D<Direction3DIn22>{
+//   top;
+// }
 
 ///
-/// [Coordinate.cube],
-/// [Coordinate.ofX], [Coordinate.ofY], [Coordinate.ofZ]
-/// [Coordinate.ofXY], [Coordinate.ofYZ], [Coordinate.ofXZ]
+/// [dz]
+/// [isNot3D], [isNegative]
+/// [hasNegative], [withoutXY]
+/// [retainXY], [retainYZAsYX], [retainYZAsXY], [retainXZAsXY], [retainXZAsYX]
+/// [roundup], [abs]
+/// [distanceSquared], [distance], [volume], [isFinite], [isInfinite], [direction], [direction3D]
+/// operators...
+/// [scale], [scaleCoordinate], [translate], [rotate], [toString]
+/// [Coordinate.cube], [Coordinate.ofX], [Coordinate.ofY], [Coordinate.ofZ]; [Coordinate.ofXY], [Coordinate.ofYZ], [Coordinate.ofXZ]
+/// [Coordinate.fromDirection]
+///
 /// [Coordinate.zero], [Coordinate.one]
+/// [maxDistance], [transferToTransformOf],
 ///
-/// [maxDistance],
-/// ...
 ///
-class Coordinate extends Offset with _CoordinateBase {
-  @override
+class Coordinate extends Offset {
   final double dz;
-
-  const Coordinate(super.dx, super.dy, this.dz);
-
-  const Coordinate.cube(double dimension)
-      : dz = dimension,
-        super(dimension, dimension);
-
-  const Coordinate.ofX(double x)
-      : dz = 0,
-        super(x, 0);
-
-  const Coordinate.ofY(double y)
-      : dz = 0,
-        super(0, y);
-
-  const Coordinate.ofZ(double z)
-      : dz = z,
-        super(0, 0);
-
-  const Coordinate.ofXY(super.dx, super.dy) : dz = 0;
-
-  const Coordinate.ofYZ(double dy, this.dz) : super(0, dy);
-
-  const Coordinate.ofXZ(double dx, this.dz) : super(dx, 0);
-
-  static const Coordinate zero = Coordinate.cube(0);
-  static const Coordinate one = Coordinate.cube(1);
-
-  static Coordinate maxDistance(Coordinate a, Coordinate b) =>
-      a.distance > b.distance ? a : b;
-
-  ///
-  ///
-  /// [Coordinate.transferToTransformOf] transfer from my coordinate system:
-  /// x axis is [Direction3DIn6.left] -> [Direction3DIn6.right], radian start from [Direction3DIn6.back]
-  /// y axis is [Direction3DIn6.front] -> [Direction3DIn6.back], radian start from [Direction3DIn6.left]
-  /// z axis is [Direction3DIn6.bottom] -> [Direction3DIn6.top], radian start from [Direction3DIn6.right]
-  ///
-  /// to "dart coordinate system" ([Transform], [Matrix4], [Offset]], ...):
-  /// x axis is [Direction3DIn6.left] -> [Direction3DIn6.right], radian start from [Direction3DIn6.back] ?
-  /// y axis is [Direction3DIn6.top] -> [Direction3DIn6.bottom], radian start from [Direction3DIn6.left] ?
-  /// z axis is [Direction3DIn6.front] -> [Direction3DIn6.back], radian start from [Direction3DIn6.right]
-  ///
-  ///
-  /// See Also:
-  ///   * [Offset.fromDirection], [Coordinate.fromDirection]
-  ///   * [Direction], [Direction3DIn6]
-  ///
-  static Coordinate transferToTransformOf(Coordinate radian) => Coordinate(
-        radian.dx,
-        -radian.dz,
-        -radian.dy,
-      );
-
-  ///
-  /// [Coordinate.fromDirection] is implement in my coordinate system (see [transferToTransformOf]),
-  /// not "dart coordinate system" ([Transform], [Matrix4], [Offset]], ...)
-  ///
-  factory Coordinate.fromDirection({
-    required Coordinate direction,
-    required double distance,
-    Coordinate scale = KCoordinate.cube_1,
-  }) {
-    final rX = direction.dx;
-    final rY = direction.dy;
-    final rZ = direction.dz;
-    return Coordinate(
-      distance * (math.cos(rZ) * math.cos(rY)),
-      distance * (math.sin(rZ) * math.cos(rX)),
-      distance * (math.sin(rX) * math.sin(rY)),
-    );
-  }
-
-  Coordinate scaling(Coordinate scale) =>
-      super.scale(scale.dx, scale.dy, scaleZ: scale.dz);
-
-  Coordinate abs() => Coordinate(dx.abs(), dy.abs(), dz.abs());
-}
-
-mixin _CoordinateBase on Offset {
-  double get dz;
 
   bool get isNot3D => (dz == 0 || dx == 0 || dy == 0);
 
@@ -665,29 +594,7 @@ mixin _CoordinateBase on Offset {
 
   bool get hasNegative => (dz < 0 || dx < 0 || dy < 0);
 
-  bool get hasNoXY => (dx == 0 && dy == 0);
-
-  Coordinate get modulus360Angle => Coordinate(
-        dx % KRadian.angle_360,
-        dy % KRadian.angle_360,
-        dz % KRadian.angle_360,
-      );
-
-  Coordinate get modulus180Angle => Coordinate(
-        dx % KRadian.angle_180,
-        dy % KRadian.angle_180,
-        dz % KRadian.angle_180,
-      );
-
-  Coordinate get modulus90Angle => Coordinate(
-        dx % KRadian.angle_90,
-        dy % KRadian.angle_90,
-        dz % KRadian.angle_90,
-      );
-
-  Coordinate get retainX => Coordinate(dx, 0, 0);
-
-  Coordinate get retainY => Coordinate(0, dy, 0);
+  bool get withoutXY => (dx == 0 && dy == 0);
 
   Coordinate get retainXY => Coordinate(dx, dy, 0);
 
@@ -705,6 +612,8 @@ mixin _CoordinateBase on Offset {
         dz.roundToDouble(),
       );
 
+  Coordinate get abs => Coordinate(dx.abs(), dy.abs(), dz.abs());
+
   @override
   double get distanceSquared => super.distanceSquared + dz * dz;
 
@@ -714,13 +623,15 @@ mixin _CoordinateBase on Offset {
   double get volume => dx * dy * dz;
 
   @override
-  double get direction => throw UnimplementedError();
-
-  @override
   bool get isFinite => super.isFinite && dz.isFinite;
 
   @override
   bool get isInfinite => super.isInfinite && dz.isInfinite;
+
+  @override
+  double get direction => throw UnimplementedError();
+
+  CoordinateRadian get direction3D => throw UnimplementedError();
 
   @override
   Coordinate operator +(covariant Coordinate other) =>
@@ -782,11 +693,11 @@ mixin _CoordinateBase on Offset {
       dz == other.dz && (super == other);
 
   @override
-  int get hashCode => Object.hash(super.hashCode, dz);
+  Rect operator &(Size other) =>
+      isNot3D ? (super & other) : throw UnimplementedError();
 
   @override
-  Rect operator &(Size other) =>
-      isNot3D ? (super & other) : (throw UnimplementedError());
+  int get hashCode => Object.hash(super.hashCode, dz);
 
   @override
   Coordinate scale(
@@ -796,27 +707,143 @@ mixin _CoordinateBase on Offset {
   }) =>
       Coordinate(dx * scaleX, dy * scaleY, dz * scaleZ);
 
+  Coordinate scaleCoordinate(Coordinate scale) =>
+      this.scale(scale.dx, scale.dy, scaleZ: scale.dz);
+
   @override
   Coordinate translate(
     double translateX,
     double translateY, {
     double translateZ = 0,
   }) =>
-      Coordinate(
-        dx + translateX,
-        dy + translateY,
-        dz + translateZ,
-      );
+      Coordinate(dx + translateX, dy + translateY, dz + translateZ);
+
+  Coordinate rotate(CoordinateRadian direction) =>
+      Coordinate.fromDirection(direction3D + direction, distance);
 
   @override
   String toString() => 'Coordinate('
       '${dx.toStringAsFixed(1)}, '
       '${dy.toStringAsFixed(1)}, '
       '${dz.toStringAsFixed(1)})';
+
+  const Coordinate(super.dx, super.dy, this.dz);
+
+  const Coordinate.cube(double dimension)
+      : dz = dimension,
+        super(dimension, dimension);
+
+  const Coordinate.ofX(double x)
+      : dz = 0,
+        super(x, 0);
+
+  const Coordinate.ofY(double y)
+      : dz = 0,
+        super(0, y);
+
+  const Coordinate.ofZ(double z)
+      : dz = z,
+        super(0, 0);
+
+  const Coordinate.ofXY(super.dx, super.dy) : dz = 0;
+
+  const Coordinate.ofYZ(double dy, this.dz) : super(0, dy);
+
+  const Coordinate.ofXZ(double dx, this.dz) : super(dx, 0);
+
+  ///
+  /// it implement in 'my coordinate system', not 'dart coordinate system' ([Transform], [Matrix4], [Offset]], ...)
+  /// see the comment above [transferToTransformOf] to understand more.
+  ///
+  factory Coordinate.fromDirection(
+      CoordinateRadian direction, [
+        double distance = 1,
+      ]) {
+    final rX = direction.dx;
+    final rY = direction.dy;
+    final rZ = direction.dz;
+    final d = distance * DoubleExtension.sqrt1_3;
+    return Coordinate(
+      d * (math.cos(rZ) * math.cos(rY)),
+      d * (math.sin(rZ) * math.cos(rX)),
+      d * (math.sin(rX) * math.sin(rY)),
+    );
+  }
+
+  static const Coordinate zero = Coordinate.cube(0);
+  static const Coordinate one = Coordinate.cube(1);
+
+  static Coordinate maxDistance(Coordinate a, Coordinate b) =>
+      a.distance > b.distance ? a : b;
+
+  ///
+  ///
+  /// [Coordinate.transferToTransformOf] transfer from my coordinate system:
+  /// x axis is [Direction3DIn6.left] -> [Direction3DIn6.right], radian start from [Direction3DIn6.back]
+  /// y axis is [Direction3DIn6.front] -> [Direction3DIn6.back], radian start from [Direction3DIn6.left]
+  /// z axis is [Direction3DIn6.bottom] -> [Direction3DIn6.top], radian start from [Direction3DIn6.right]
+  ///
+  /// to "dart coordinate system" ([Transform], [Matrix4], [Offset]], ...):
+  /// x axis is [Direction3DIn6.left] -> [Direction3DIn6.right], radian start from [Direction3DIn6.back] ?
+  /// y axis is [Direction3DIn6.top] -> [Direction3DIn6.bottom], radian start from [Direction3DIn6.left] ?
+  /// z axis is [Direction3DIn6.front] -> [Direction3DIn6.back], radian start from [Direction3DIn6.right]
+  ///
+  ///
+  /// See Also:
+  ///   * [Offset.fromDirection], [Coordinate.fromDirection]
+  ///   * [Direction], [Direction3DIn6]
+  ///
+  static Coordinate transferToTransformOf(Coordinate radian) => Coordinate(
+        radian.dx,
+        -radian.dz,
+        -radian.dy,
+      );
 }
 
+///
+/// [modulus90Angle], [modulus180Angle], [modulus360Angle]
+///
+class CoordinateRadian extends Coordinate {
+  const CoordinateRadian(super.dx, super.dy, super.dz);
+
+  @override
+  CoordinateRadian operator +(covariant CoordinateRadian other) =>
+      CoordinateRadian(dx + other.dx, dy + other.dy, dz + other.dz);
+
+  @override
+  CoordinateRadian operator -(covariant CoordinateRadian other) =>
+      CoordinateRadian(dx - other.dx, dy - other.dy, dz - other.dz);
+
+  Coordinate get modulus90Angle => Coordinate(
+        dx % KRadian.angle_90,
+        dy % KRadian.angle_90,
+        dz % KRadian.angle_90,
+      );
+
+  Coordinate get modulus180Angle => Coordinate(
+        dx % KRadian.angle_180,
+        dy % KRadian.angle_180,
+        dz % KRadian.angle_180,
+      );
+
+  Coordinate get modulus360Angle => Coordinate(
+        dx % KRadian.angle_360,
+        dy % KRadian.angle_360,
+        dz % KRadian.angle_360,
+      );
+}
+
+///
+///
+///
+/// [Vector3D]
+///
+///
+///
+
+//
 class Vector3D {
-  final Coordinate direction;
+  final CoordinateRadian direction;
   final double distance;
 
   const Vector3D(this.direction, this.distance);
@@ -824,26 +851,89 @@ class Vector3D {
   Offset get toOffset => Offset.fromDirection(-direction.dy, distance);
 
   Coordinate get toCoordinate => Coordinate.fromDirection(
-        direction: direction,
-        distance: distance,
+        direction,
+        distance,
       );
 
-  Vector3D rotated(Coordinate d) => Vector3D(direction + d, distance);
+  Vector3D rotated(CoordinateRadian d) => Vector3D(direction + d, distance);
 
   @override
   String toString() => "Vector($direction, $distance)";
 
   static Vector3D lerp(Vector3D begin, Vector3D end, double t) => Vector3D(
-      Tween(
-        begin: begin.direction,
-        end: end.direction,
-      ).transform(t),
-      Tween(
-        begin: begin.distance,
-        end: end.distance,
-      ).transform(t));
+        Tween(begin: begin.direction, end: end.direction).transform(t),
+        Tween(begin: begin.distance, end: end.distance).transform(t),
+      );
 }
 
+///
+///
+///
+/// [CubicOffset]
+///
+///
+///
+
+
+class CubicOffset {
+  final Cubic x;
+  final Cubic y;
+
+  const CubicOffset(this.x, this.y);
+
+  Offset get a => Offset(x.a, y.a);
+
+  Offset get b => Offset(x.b, y.b);
+
+  Offset get c => Offset(x.c, y.c);
+
+  Offset get d => Offset(x.d, y.d);
+
+  CubicOffset.fromPoints(List<Offset> offsets)
+      : assert(offsets.length == 4),
+        x = Cubic(offsets[0].dx, offsets[1].dx, offsets[2].dx, offsets[3].dx),
+        y = Cubic(offsets[0].dy, offsets[1].dy, offsets[2].dy, offsets[3].dy);
+
+  List<Offset> get points =>
+      [Offset(x.a, y.a), Offset(x.b, y.b), Offset(x.c, y.c), Offset(x.d, y.d)];
+
+  Offset operator [](int index) => switch (index) {
+    0 => Offset(x.a, y.a),
+    1 => Offset(x.b, y.b),
+    2 => Offset(x.c, y.c),
+    3 => Offset(x.d, y.d),
+    _ => throw UnimplementedError(index.toString()),
+  };
+
+  CubicOffset operator *(double scale) => CubicOffset(
+    Cubic(x.a * scale, x.b * scale, x.c * scale, x.d * scale),
+    Cubic(y.a * scale, y.b * scale, y.c * scale, y.d * scale),
+  );
+
+  CubicOffset mapXY(Mapper<Cubic> mapper) => CubicOffset(mapper(x), mapper(y));
+
+  CubicOffset mapX(Mapper<Cubic> mapper) => CubicOffset(mapper(x), y);
+
+  CubicOffset mapY(Mapper<Cubic> mapper) => CubicOffset(x, mapper(y));
+
+  static CubicOffset companionSizeAdjustCenter(
+      CubicOffset cubicOffset,
+      Size size,
+      ) =>
+      CubicOffset.fromPoints(
+        cubicOffset.points.adjustCenterFor(size).toList(),
+      );
+}
+
+///
+///
+///
+/// [Curving]
+///
+///
+///
+
+//
 class Curving extends Curve {
   final Mapper<double> mapper;
 
@@ -854,4 +944,33 @@ class Curving extends Curve {
 
   @override
   double transformInternal(double t) => mapper(t);
+}
+
+///
+///
+///
+/// [Combination]
+///
+///
+///
+
+//
+class Combination {
+  final int m;
+  final int n;
+
+  const Combination(this.m, this.n) : assert(m >= 0 && n <= m);
+
+  int get c => IntExtension.binomialCoefficient(m, n + 1);
+
+  int get p => IntExtension.partition(m, n);
+
+  List<List<int>> get pGroups => IntExtension.partitionGroups(m, n)
+    ..sort(FComparatorList.accordinglyUntil(n - 1));
+
+  @override
+  String toString() => 'Combination(\n'
+      '($m, $n), c: $c\n'
+      'p: $p------${pGroups.fold('', (a, b) => '$a \n $b')}\n'
+      ')';
 }

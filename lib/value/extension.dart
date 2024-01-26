@@ -45,9 +45,9 @@ extension NullableExtension<T> on T? {
       this == null ? null : value(this as T);
 
   S translateOr<S>(
-      Translator<T, S> translate, {
-        required Supplier<S> ifAbsent,
-      }) {
+    Translator<T, S> translate, {
+    required Supplier<S> ifAbsent,
+  }) {
     final value = this;
     return value == null ? ifAbsent() : translate(value);
   }
@@ -128,6 +128,9 @@ extension OffsetExtension on Offset {
   double distanceHalfTo(Offset p) => (p - this).distance / 2;
 
   Offset middleWith(Offset p) => (p + this) / 2;
+
+  Offset rotate(double direction) =>
+      Offset.fromDirection(this.direction + direction, distance);
 
   Offset direct(double direction, [double distance = 1]) =>
       this + Offset.fromDirection(direction, distance);
@@ -233,10 +236,6 @@ extension RectExtension on Rect {
 
   double get distanceDiagonal => size.diagonal;
 
-  ///
-  ///
-  /// my usages ------------------------------------------------------------------------------------------------------
-  ///
   Offset offsetOf<T>(T value) => switch (value) {
         Alignment() => switch (value) {
             Alignment.topLeft => topLeft,
@@ -250,30 +249,26 @@ extension RectExtension on Rect {
             Alignment.bottomRight => bottomRight,
             _ => throw UnimplementedError(),
           },
-        Direction2DIn8() => switch (value) {
-            Direction2DIn8.topLeft => topLeft,
-            Direction2DIn8.top => topCenter,
-            Direction2DIn8.topRight => topRight,
-            Direction2DIn8.left => centerLeft,
-            Direction2DIn8.right => centerRight,
-            Direction2DIn8.bottomLeft => bottomLeft,
-            Direction2DIn8.bottom => bottomCenter,
-            Direction2DIn8.bottomRight => bottomRight,
+        Direction() => switch (value) {
+            Direction2D() => value.di(this),
+            Direction3D() => throw UnimplementedError(),
           },
-        _ => throw UnimplementedError(),
+        _ => throw UnimplementedError(T.toString()),
       };
-
-  Rect expandToIncludeDirection({
-    required Direction2DIn8 direction,
-    required double width,
-    required double length,
-  }) =>
-      expandToInclude(
-        direction.extruding(offsetOf(direction))(width, length),
-      );
 }
 
+///
+/// [flipped]
+/// [radianRangeForSide], [radianBoundaryForSide]
+/// [radianRangeForSideStepOf]
+/// [directionOfSideSpace]
+///
+/// [deviateBuilder]
+///
+///
 extension AlignmentExtension on Alignment {
+  Alignment get flipped => Alignment(-x, -y);
+
   double get radianRangeForSide {
     final boundary = radianBoundaryForSide;
     return boundary.$2 - boundary.$1;
@@ -294,6 +289,16 @@ extension AlignmentExtension on Alignment {
 
   double radianRangeForSideStepOf(int count) =>
       radianRangeForSide / (this == Alignment.center ? count : count - 1);
+
+  Generator<double> directionOfSideSpace(bool isClockwise, int count) {
+    final boundary = radianBoundaryForSide;
+    final origin = isClockwise ? boundary.$1 : boundary.$2;
+    final step = radianRangeForSideStepOf(count);
+
+    return isClockwise
+        ? (index) => origin + step * index
+        : (index) => origin - step * index;
+  }
 
   Mapper<Widget> get deviateBuilder {
     Row rowOf(List<Widget> children) => Row(
@@ -321,16 +326,6 @@ extension AlignmentExtension on Alignment {
     };
 
     return (child) => columnBuilder(child);
-  }
-
-  Generator<double> directionOfSideSpace(bool isClockwise, int count) {
-    final boundary = radianBoundaryForSide;
-    final origin = isClockwise ? boundary.$1 : boundary.$2;
-    final step = radianRangeForSideStepOf(count);
-
-    return isClockwise
-        ? (index) => origin + step * index
-        : (index) => origin - step * index;
   }
 }
 
@@ -491,9 +486,9 @@ extension PathExtension on Path {
         endPoint.dy,
       );
 
-  /// [points] should be treated as [controlPointA, controlPointB, endPoint]
-  void cubicToPointsList(List<Offset> points) =>
-      cubicToPoint(points[0], points[1], points[2]);
+  void cubic(CubicOffset offsets) => this
+    ..moveToPoint(offsets.a)
+    ..cubicToPoint(offsets.b, offsets.c, offsets.d);
 
   ///
   ///

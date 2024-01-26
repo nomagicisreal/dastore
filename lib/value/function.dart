@@ -5,16 +5,16 @@
 /// [FRadian], [FRadianCoordinate]
 ///
 ///
-/// [FPredicator], [FPredicatorNum], [FPredicatorCombiner], [FPredicatorTernaryCombiner]
+/// [FPredicator], [FPredicatorCombiner]
 /// [FComparatorList]
-/// [FMapper], [FMapperDouble], [FMapperBoxConstraints]
-/// [FGenerator], [FGeneratorRadius], [FGeneratorOffset], [FGenerator2D]
+/// [FMapper], [FMapperDouble], [FMapperCubic], [FMapperMapCubicOffset]
+/// [FGenerator], [FGeneratorOffset]
 /// [FTranslator]
 /// [FReducerNum]
 ///
 ///
 ///
-///
+/// [FExtruding2D]
 /// [FWidgetParentBuilder]
 /// [FTextFormFieldValidator]
 ///
@@ -134,49 +134,57 @@ extension FPredicator on Predicator {
       (currentDay) => DateTimeExtension.isSameDay(currentDay, day);
 }
 
-extension FPredicatorNum on Predicator<num> {
-  static bool isALess(num a, num b) => a < b;
+extension FPredicatorCombiner on PredicateCombiner<num> {
+  // bool
+  static bool boolEqual(bool a, bool b) => a == b;
 
-  static bool isALarger(num a, num b) => a > b;
+  static bool boolUnequal(bool a, bool b) => a != b;
 
-  static bool isEntryKeyLess<T>(MapEntry<num, T> a, MapEntry<num, T> b) =>
+  // num
+  static bool numEqual(num a, num b) => a == b;
+
+  static bool numIsALess(num a, num b) => a < b;
+
+  static bool numIsALarger(num a, num b) => a > b;
+
+  // int
+  static bool intEqual(int a, int b) => a == b;
+
+  static bool intIsALess(int a, int b) => a < b;
+
+  static bool intIsALarger(int a, int b) => a > b;
+
+  // double
+  static bool doubleEqual(double a, double b) => a == b;
+
+  static bool doubleIsALess(double a, double b) => a < b;
+
+  static bool doubleIsALarger(double a, double b) => a > b;
+
+  // entry key
+  static bool entryIsNumKeyLess<T>(MapEntry<num, T> a, MapEntry<num, T> b) =>
       a.key < b.key;
 
-  static bool isEntryKeyLarger<T>(MapEntry<num, T> a, MapEntry<num, T> b) =>
+  static bool entryIsNumKeyLarger<T>(MapEntry<num, T> a, MapEntry<num, T> b) =>
       a.key > b.key;
-}
 
-extension FPredicatorCombiner on Combiner {
-  static bool alwaysTrue<T>(T a, T? b) => true;
+  // always
+  static bool alwaysTrue<T>(T a, T b) => true;
 
-  static bool alwaysFalse<T>(T a, T? b) => false;
+  static bool alwaysFalse<T>(T a, T b) => false;
 
-  static bool equal(bool a, bool? b) => a == b;
+  static bool? ternaryAlwaysTrue<T>(T a, T b) => true;
 
-  static bool unequal(bool a, bool? b) => a != b;
+  static bool? ternaryAlwaysFalse<T>(T a, T b) => false;
 
-  static bool intEqual(int a, int? b) => a == b;
+  static bool? ternaryAlwaysNull<T>(T a, T b) => null;
 
-  static bool intBigger(int a, int? b) => b != null && a > b;
-
-  static bool intSmaller(int a, int? b) => b != null && a < b;
-}
-
-extension FPredicatorTernaryCombiner on Combiner {
-  static bool? alwaysTrue<T>(T a, T? b) => true;
-
-  static bool? alwaysFalse<T>(T a, T? b) => false;
-
-  static bool? alwaysNull<T>(T a, T? b) => null;
-
-  static bool? intEqualOrSmallerOrBigger(int? a, int? b) =>
-      b == null || a == null
-          ? null
-          : switch (a - b) {
-              0 => true,
-              < 0 => false,
-              _ => null,
-            };
+  // ternary equal, less, larger
+  static bool? ternaryIntEqualOrLessOrLarger(int a, int b) => switch (a - b) {
+        0 => true,
+        < 0 => false,
+        _ => null,
+      };
 }
 
 ///
@@ -228,6 +236,11 @@ extension FMapper on Mapper {
   static Curve ofCurve(Curve v) => v;
 
   static Curve ofCurveFlipped(Curve v) => v.flipped;
+
+  static BoxConstraints ofBoxConstraints(BoxConstraints v) => v;
+
+  static BoxConstraints boxConstraintsLoosen(BoxConstraints constraints) =>
+      constraints.loosen();
 }
 
 extension FMapperDouble on Mapper<double> {
@@ -272,9 +285,25 @@ extension FMapperDouble on Mapper<double> {
   }
 }
 
-extension FMapperBoxConstraints on BoxConstraints {
-  static BoxConstraints loosen(BoxConstraints constraints) =>
-      constraints.loosen();
+extension FMapperCubic on Cubic {
+  static Cubic aCdB(Cubic cubic) => Cubic(cubic.a, cubic.c, cubic.d, cubic.b);
+
+  static Cubic bCdA(Cubic cubic) => Cubic(cubic.b, cubic.c, cubic.d, cubic.a);
+}
+
+extension FMapperMapCubicOffset on Mapper<Map<Offset, CubicOffset>> {
+  static Map<Offset, CubicOffset> aCdB(Map<Offset, CubicOffset> points) =>
+      points.map(
+        (current, cubics) => MapEntry(
+          current,
+          cubics.mapXY(FMapperCubic.aCdB),
+        ),
+      );
+
+  static Mapper<Map<Offset, CubicOffset>> of(Mapper<Cubic> mapper) =>
+      (corners) => corners.map(
+            (p, cubics) => MapEntry(p, cubics.mapXY(mapper)),
+          );
 }
 
 ///
@@ -294,17 +323,19 @@ extension FMapperBoxConstraints on BoxConstraints {
 ///
 extension FGenerator on Generator {
   static Generator<T> fill<T>(T value) => (i) => value;
-}
 
-extension FGeneratorRadius on List<Radius> {
-  static List<Radius> circular(int n, double radius) =>
-      List.generate(n, (index) => Radius.circular(radius));
+  static double toDouble(int index) => index.toDouble();
+
+  static Generator<Radius> radiusFillCircular(double radius) =>
+      (_) => Radius.circular(radius);
+
+  static Generator2D<T> fill2D<T>(T value) => (i, j) => value;
 }
 
 extension FGeneratorOffset on Generator<Offset> {
   static Generator<Offset> withValue(
     double value,
-    Offset Function(int index, double value) generator,
+    GeneratorTranslator<double, Offset> generator,
   ) =>
       (index) => generator(index, value);
 
@@ -354,10 +385,6 @@ extension FGeneratorOffset on Generator<Offset> {
         group2ThresholdX: 0,
         group2ThresholdY: 11,
       );
-}
-
-extension FGenerator2D<T> on Generator2D<T> {
-  static Generator2D<T> of<T>(T value) => (i, j) => value;
 }
 
 ///
@@ -412,6 +439,130 @@ extension FReducerNum<N extends num> on Reducer<N> {
 ///
 ///
 ///
+
+///
+/// static methods:
+/// [directOnSize], [directOnWidth], [directByDimension]
+/// [fromRectDirection]
+///
+/// instance methods:
+/// [translateOnSize], [translateOnWidth], [translateOfDimension]
+///
+///
+extension FExtruding2D on Extruding2D {
+  static Translator<double, Rect> directOnSize({
+    required Rect rect,
+    required Direction2D direction,
+    required double width,
+    required double height,
+    bool timesOrPlus = true,
+  }) =>
+      fromRectDirection(rect, direction).translateOnSize(
+        width,
+        height,
+        timesOrPlus: timesOrPlus,
+      );
+
+  static Translator<double, Rect> directOnWidth({
+    required Rect rect,
+    required Direction2D direction,
+    required double width,
+  }) =>
+      fromRectDirection(rect, direction).translateOnWidth(width);
+
+  static Translator<double, Rect> directByDimension({
+    required Rect rect,
+    required Direction2D direction,
+    required double dimension,
+    bool timesOrPlus = true,
+  }) =>
+      fromRectDirection(rect, direction).translateOfDimension(
+        dimension,
+        timesOrPlus: timesOrPlus,
+      );
+
+  static Extruding2D fromRectDirection(Rect rect, Direction2D direction) =>
+      switch (direction) {
+        Direction2DIn4.top || Direction2DIn8.top => () {
+            final origin = rect.topCenter;
+            return (width, length) => Rect.fromPoints(
+                  origin + Offset(width / 2, 0),
+                  origin + Offset(-width / 2, -length),
+                );
+          }(),
+        Direction2DIn4.left || Direction2DIn8.left => () {
+            final origin = rect.centerLeft;
+            return (width, length) => Rect.fromPoints(
+                  origin + Offset(0, width / 2),
+                  origin + Offset(-length, -width / 2),
+                );
+          }(),
+        Direction2DIn4.right || Direction2DIn8.right => () {
+            final origin = rect.centerRight;
+            return (width, length) => Rect.fromPoints(
+                  origin + Offset(0, width / 2),
+                  origin + Offset(length, -width / 2),
+                );
+          }(),
+        Direction2DIn4.bottom || Direction2DIn8.bottom => () {
+            final origin = rect.bottomCenter;
+            return (width, length) => Rect.fromPoints(
+                  origin + Offset(width / 2, 0),
+                  origin + Offset(-width / 2, length),
+                );
+          }(),
+        Direction2DIn8.topLeft => () {
+            final origin = rect.topLeft;
+            return (width, length) => Rect.fromPoints(
+                  origin,
+                  origin + Offset(-length, -length) * DoubleExtension.sqrt1_2,
+                );
+          }(),
+        Direction2DIn8.topRight => () {
+            final origin = rect.topRight;
+            return (width, length) => Rect.fromPoints(
+                  origin,
+                  origin + Offset(length, -length) * DoubleExtension.sqrt1_2,
+                );
+          }(),
+        Direction2DIn8.bottomLeft => () {
+            final origin = rect.bottomLeft;
+            return (width, length) => Rect.fromPoints(
+                  origin,
+                  origin + Offset(-length, length) * DoubleExtension.sqrt1_2,
+                );
+          }(),
+        Direction2DIn8.bottomRight => () {
+            final origin = rect.bottomRight;
+            return (width, length) => Rect.fromPoints(
+                  origin,
+                  origin + Offset(length, length) * DoubleExtension.sqrt1_2,
+                );
+          }(),
+      };
+
+  ///
+  /// when [timesOrPlus] == true, its means that extruding value will be multiplied on [height]
+  /// when [timesOrPlus] == false, its means that extruding value will be added on [height]
+  ///
+  Translator<double, Rect> translateOnSize(
+    double width,
+    double height, {
+    bool timesOrPlus = true,
+  }) {
+    final calculating = timesOrPlus ? (v) => height * v : (v) => height + v;
+    return (value) => this(width, calculating(value));
+  }
+
+  Translator<double, Rect> translateOnWidth(double width) =>
+      translateOnSize(width, 0, timesOrPlus: false);
+
+  Translator<double, Rect> translateOfDimension(
+    double dimension, {
+    bool timesOrPlus = true,
+  }) =>
+      translateOnSize(dimension, dimension, timesOrPlus: timesOrPlus);
+}
 
 extension FWidgetParentBuilder on WidgetParentBuilder {
   WidgetBuilder builderFrom(Iterable<WidgetBuilder> children) =>
