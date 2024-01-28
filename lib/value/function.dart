@@ -270,17 +270,10 @@ extension FMapperDouble on Mapper<double> {
   static Mapper<double> sinFromFactor(double timeFactor, double factor) =>
       (value) => math.sin(timeFactor * value) * factor;
 
-  // return "times of period" of (0 ~ 1 ~ 0 ~ -1 ~ 0)
+  // return "times of period" of (0 ~ 1 ~ 1... ~ -1 ~ 0)
   static Mapper<double> sinFromPeriod(double times) {
-    final tween = Tween(
-      begin: 0.0,
-      end: switch (times) {
-        double.infinity || double.negativeInfinity => throw UnimplementedError(
-            'instead of times infinity, pls use [Ani] to repeat animation',
-          ),
-        _ => KRadian.angle_360 * times,
-      },
-    );
+    assert(times.isFinite);
+    final tween = Tween(begin: 0.0, end: KRadian.angle_360 * times);
     return (value) => math.sin(tween.transform(value));
   }
 }

@@ -756,9 +756,9 @@ class Coordinate extends Offset {
   /// see the comment above [transferToTransformOf] to understand more.
   ///
   factory Coordinate.fromDirection(
-      CoordinateRadian direction, [
-        double distance = 1,
-      ]) {
+    CoordinateRadian direction, [
+    double distance = 1,
+  ]) {
     final rX = direction.dx;
     final rY = direction.dy;
     final rZ = direction.dz;
@@ -801,10 +801,26 @@ class Coordinate extends Offset {
 }
 
 ///
+///
+/// [CoordinateRadian.circle], [CoordinateRadian.ofX], [CoordinateRadian.ofY], [CoordinateRadian.ofZ]; [CoordinateRadian.ofXY], [CoordinateRadian.ofYZ], [CoordinateRadian.ofXZ]
 /// [modulus90Angle], [modulus180Angle], [modulus360Angle]
 ///
 class CoordinateRadian extends Coordinate {
   const CoordinateRadian(super.dx, super.dy, super.dz);
+
+  const CoordinateRadian.circle(super.dimension) : super.cube();
+
+  const CoordinateRadian.ofX(super.dx) : super.ofX();
+
+  const CoordinateRadian.ofY(super.dy) : super.ofY();
+
+  const CoordinateRadian.ofZ(super.dz) : super.ofZ();
+
+  const CoordinateRadian.ofXY(super.dx, super.dy) : super.ofXY();
+
+  const CoordinateRadian.ofYZ(super.dy, super.dz) : super.ofYZ();
+
+  const CoordinateRadian.ofXZ(super.dx, super.dz) : super.ofXZ();
 
   @override
   CoordinateRadian operator +(covariant CoordinateRadian other) =>
@@ -874,7 +890,6 @@ class Vector3D {
 ///
 ///
 
-
 class CubicOffset {
   final Cubic x;
   final Cubic y;
@@ -898,17 +913,17 @@ class CubicOffset {
       [Offset(x.a, y.a), Offset(x.b, y.b), Offset(x.c, y.c), Offset(x.d, y.d)];
 
   Offset operator [](int index) => switch (index) {
-    0 => Offset(x.a, y.a),
-    1 => Offset(x.b, y.b),
-    2 => Offset(x.c, y.c),
-    3 => Offset(x.d, y.d),
-    _ => throw UnimplementedError(index.toString()),
-  };
+        0 => Offset(x.a, y.a),
+        1 => Offset(x.b, y.b),
+        2 => Offset(x.c, y.c),
+        3 => Offset(x.d, y.d),
+        _ => throw UnimplementedError(index.toString()),
+      };
 
   CubicOffset operator *(double scale) => CubicOffset(
-    Cubic(x.a * scale, x.b * scale, x.c * scale, x.d * scale),
-    Cubic(y.a * scale, y.b * scale, y.c * scale, y.d * scale),
-  );
+        Cubic(x.a * scale, x.b * scale, x.c * scale, x.d * scale),
+        Cubic(y.a * scale, y.b * scale, y.c * scale, y.d * scale),
+      );
 
   CubicOffset mapXY(Mapper<Cubic> mapper) => CubicOffset(mapper(x), mapper(y));
 
@@ -917,9 +932,9 @@ class CubicOffset {
   CubicOffset mapY(Mapper<Cubic> mapper) => CubicOffset(x, mapper(y));
 
   static CubicOffset companionSizeAdjustCenter(
-      CubicOffset cubicOffset,
-      Size size,
-      ) =>
+    CubicOffset cubicOffset,
+    Size size,
+  ) =>
       CubicOffset.fromPoints(
         cubicOffset.points.adjustCenterFor(size).toList(),
       );

@@ -91,6 +91,7 @@ extension DoubleExtension on double {
   bool get isNearlyInt => (ceil() - this) <= 0.01;
 
   double get clampPositive => clampDouble(this, 0.0, double.infinity);
+
   double get clampNegative => clampDouble(this, double.negativeInfinity, 0);
 
   ///
@@ -655,6 +656,7 @@ extension IntExtension on int {
 /// [chunk]
 /// [groupBy]
 /// [lengthFlatted]
+/// [combine]
 ///
 extension IterableExtension<I> on Iterable<I> {
   static Iterable<I> generateFrom<I>(
@@ -935,6 +937,13 @@ extension IterableExtension<I> on Iterable<I> {
           _ => throw UnimplementedError('unknown type: $element for $S'),
         },
       );
+
+  Iterable<MapEntry<I, V>> combine<V>(Iterable<V> values) =>
+      foldWith<List<MapEntry<I, V>>, V>(
+        values,
+        [],
+        (list, key, value) => list..add(MapEntry(key, value)),
+      );
 }
 
 extension IterableIntExtension on Iterable<int> {
@@ -1047,10 +1056,10 @@ extension ListExtension<T> on List<T> {
   /// static methods
   ///
   static List<T> generateFrom<T>(
-    int length, {
+    int length,
+    Generator<T> generator, {
     int start = 1,
     bool growable = true,
-    required Generator<T> generator,
   }) =>
       List.generate(
         length,
@@ -1286,16 +1295,6 @@ extension ListExtension<T> on List<T> {
     }
 
     return difference;
-  }
-
-  Iterable<MapEntry<T, V>> combine<V>(
-    List<V> values, {
-    bool joinInValuesLength = true,
-  }) sync* {
-    final length = joinInValuesLength ? values.length : this.length;
-    for (var i = 0; i < length; i++) {
-      yield MapEntry(this[i], values[i]);
-    }
   }
 }
 

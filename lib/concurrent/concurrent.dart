@@ -70,6 +70,17 @@ class DurationFR {
   String toString() => 'DurationFR(forward: $forward, reverse:$reverse)';
 }
 
+///
+/// [forward], [reverse]
+///
+/// [CurveFR.symmetry]
+/// [CurveFR.intervalFlip]
+///
+/// [fusionIntervalFlipIn]
+/// [fusionIntervalFlipForSymmetryPeriodSinIn]
+///
+/// [interval], [flipped]
+///
 class CurveFR {
   final Curve forward;
   final Curve reverse;
@@ -84,6 +95,29 @@ class CurveFR {
       : forward = Interval(begin, end, curve: curve.forward),
         reverse = Interval(begin, end, curve: curve.reverse);
 
+  ///
+  /// [fusionIntervalFlipIn]
+  /// [fusionIntervalFlipForSymmetryPeriodSinIn]
+  ///
+  static Fusionor<CurveFR, double, double, CurveFR> fusionIntervalFlipIn(
+      int steps,
+      ) =>
+          (curve, begin, end) => CurveFR.intervalFlip(
+        curve,
+        begin / steps,
+        end / steps,
+      );
+
+  static Fusionor<int, double, double, CurveFR>
+  fusionIntervalFlipForSymmetryPeriodSinIn(
+      int steps,
+      ) =>
+          (times, begin, end) => CurveFR.intervalFlip(
+        CurveFR.symmetry(Curving.sinPeriodOf(times)),
+        begin / steps,
+        end / steps,
+      );
+
   CurveFR interval(double begin, double end) => CurveFR(
         Interval(begin, end, curve: forward),
         Interval(begin, end, curve: reverse),
@@ -94,6 +128,7 @@ class CurveFR {
 
 extension DurationExtension on Duration {
   DurationFR get toDurationFR => DurationFR.constant(this);
+
   String toStringDayMinuteSecond({String splitter = ':'}) {
     final dayMinuteSecond = toString().substring(0, 7);
     return splitter == ":"
@@ -153,9 +188,9 @@ extension DateTimeExtension on DateTime {
 
 extension StreamExtension<M> on Stream<M> {
   static Stream<T> generateFromIterable<T>(
-      int count, {
-        Generator<T>? generator,
-      }) =>
+    int count, {
+    Generator<T>? generator,
+  }) =>
       Stream.fromIterable(Iterable.generate(count, generator));
 
   static Stream<int> intOf({
@@ -420,4 +455,3 @@ extension FTimerConsumer on Consumer<Timer> {
     };
   }
 }
-

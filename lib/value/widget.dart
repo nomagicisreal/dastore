@@ -35,8 +35,6 @@
 ///
 ///
 ///
-///
-///
 part of dastore;
 
 ///
@@ -497,7 +495,7 @@ extension FBoxShadow on BoxShadow {
 ///   [FBorderInput.underline]
 ///
 /// see https://api.flutter.dev/flutter/painting/ShapeBorder-class.html for more detail about [ShapeBorder]
-///
+/// [FBorderOutlined.linear] usually used with [ButtonStyle.shape] by invoking [TextButton.styleFrom]
 ///
 ///
 ///
