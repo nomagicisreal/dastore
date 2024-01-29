@@ -1,10 +1,8 @@
 
 import 'dart:developer';
 
-import 'package:dastore/dastore.dart';
-
 void main() {
-  log(Combination(16, 4).toString());
+  log('hello');
   // runApp(const MyApp());
 }
 

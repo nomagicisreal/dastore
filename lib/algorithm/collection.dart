@@ -15,10 +15,12 @@
 /// [ListListExtension], [ListListComparableExtension], [ListSetExtension]
 ///
 ///
+///
+///
 /// [MapEntryExtension]
 /// [MapEntryIterableExtension]
 /// [MapExtension]
-///
+/// [MapKeyComparableExtension]
 ///
 ///
 ///
@@ -40,7 +42,7 @@ part of dastore;
 ///
 ///
 /// [square]
-/// [rangeIn]
+/// [rangeIn], [rangeFromMaxTo], [rangeFromMinTo], [within]
 /// [isLowerOrEqualTo], [isHigherOrEqualTo]
 /// [isLowerOneOrEqualTo], [isHigherOneOrEqualTo]
 ///
@@ -49,6 +51,12 @@ extension NumExtension on num {
   num get square => math.pow(this, 2);
 
   bool rangeIn(num min, num max) => this >= min && this <= max;
+
+  bool rangeFromMaxTo(num max, num min) => this > min && this <= max;
+
+  bool rangeFromMinTo(num min, num max) => this >= min && this < max;
+
+  bool within(num min, num max) => this > min && this < max;
 
   bool isLowerOrEqualTo(num value) => this == value || this < value;
 
@@ -1323,10 +1331,24 @@ extension ListOffsetExtension on List<Offset> {
 }
 
 ///
-/// [sortMerge]
-/// [sortPivot]
+/// [isSorted], [sortMerge], [sortPivot]
 ///
 extension ListComparableExtension<C extends Comparable> on List<C> {
+  ///
+  /// to be in consistent with [sort],
+  /// [isSorted] will take increasing and equal as expectation, take decreasing as [invalid]
+  ///
+  bool isSorted([Comparator<C>? invalid]) {
+    final length = this.length;
+    final comparing = invalid ?? (a, b) => 1; // decreasing
+    C a = this[0];
+    for (var i = 1; i < length; i++) {
+      final b = this[i];
+      if (a.compareTo(b) == comparing(a, b)) return false;
+    }
+    return true;
+  }
+
   ///
   /// [sortMerge] aka merge sort:
   ///   1. regarding current list as the mix of 2 elements sublist, sorting for each sublist
@@ -1471,12 +1493,31 @@ extension ListListExtension<T> on List<List<T>> {
   }
 }
 
+///
+/// [sortByElementFirst]
+/// [sortAccordingly]
+///
 extension ListListComparableExtension<C extends Comparable> on List<List<C>> {
-  void orderByElementFirst([Comparator<C>? comparator]) => sort(
-        comparator != null
-            ? (a, b) => comparator.call(a.first, b.first)
-            : (a, b) => b.first.compareTo(a.first),
+  void sortByElementFirst([Comparator<C>? compare]) => sort(
+        compare != null
+            ? (a, b) => compare(a.first, b.first)
+            : (a, b) => b.first.compareTo(a.first), // increasing
       );
+
+  void sortAccordingly([Comparator<C>? comparator]) {
+    final length = first.length;
+    assert(every((element) => element.length == length));
+
+    final comparing = comparator ?? (C a, C b) => a.compareTo(b); // increase
+    final maxIndex = length - 1;
+    sort((a, b) {
+      int compareFrom(int i) {
+        final value = comparing(b[i], a[i]);
+        return value == 0 && i < maxIndex ? compareFrom(i + 1) : value;
+      }
+      return compareFrom(0);
+    });
+  }
 }
 
 extension ListSetExtension<I> on List<Set<I>> {
@@ -1500,6 +1541,11 @@ extension ListSetExtension<I> on List<Set<I>> {
 
   void mergeWhereAndRemoveAllAndAdd(Predicator<Set<I>> predicator) =>
       add(removeWhereAndGet(predicator).mergeAll());
+}
+
+extension SetExtension<K> on Set<K> {
+  Map<K, V> valuingToMap<V>(Translator<K, V> valuing) =>
+      Map.fromIterables(this, map(valuing));
 }
 
 ///
@@ -1526,14 +1572,18 @@ extension MapEntryIterableExtension<K, V> on Iterable<MapEntry<K, V>> {
 }
 
 ///
-///
 /// [notContainsKey]
 /// [containsKeys]
-/// [updateAll]
+///
+/// [keysIntersectionWith], [keysDifferenceWith]
+/// [addAllDifference],
+/// [removeFrom], [_removeFrom], [removeDifference], [removeIntersection]
+/// [updateFrom], [updateDifference], [updateIntersection]
+/// [mergeAs]
+///
 /// [join]
 /// [fold], [foldWithIndex], [foldKeys], [foldValues]
 /// [reduceKeys], [reduceValues], [reduceTo], [reduceToNum]
-///
 ///
 extension MapExtension<K, V> on Map<K, V> {
   bool notContainsKey(K key) => !containsKey(key);
@@ -1547,17 +1597,74 @@ extension MapExtension<K, V> on Map<K, V> {
     return true;
   }
 
-  void updateAll(Iterable<K>? keys, Mapper<V> value) {
-    if (keys != null) {
-      for (var k in keys) {
-        update(k, value);
-      }
+  Set<K> get keysSet => keys.toSet();
+
+  ///
+  /// keys
+  ///
+  Iterable<K> keysIntersectionWith(Set<K> another) =>
+      keysSet.intersection(another);
+
+  Iterable<K> keysDifferenceWith(Set<K> another) => keysSet.difference(another);
+
+  ///
+  /// add
+  ///
+  void addAllDifference(Set<K> keys, V Function(K key) valuing) =>
+      addAll(keys.difference(keysSet).valuingToMap(valuing));
+
+  ///
+  /// remove
+  ///
+  Iterable<V?> removeFrom(Iterable<K> keys) sync* {
+    for (var key in keys) {
+      yield remove(key);
     }
   }
 
-  String join([String entrySeparator = '', String separator = '']) =>
-      entries.map((entry) => entry.join(entrySeparator)).join(separator);
+  Iterable<V> _removeFrom(Iterable<K> keys) sync* {
+    for (var key in keys) {
+      yield remove(key)!;
+    }
+  }
 
+  Iterable<V> removeIntersection(Set<K> keys) =>
+      _removeFrom(keysIntersectionWith(keys));
+
+  Iterable<V> removeDifference(Set<K> keys) =>
+      _removeFrom(keysDifferenceWith(keys));
+
+  ///
+  /// update
+  ///
+  Iterable<V> updateFrom(Iterable<K> keys, Companion<V, K> updating) sync* {
+    for (var key in keys) {
+      yield update(key, (value) => updating(value, key));
+    }
+  }
+
+  Iterable<V> updateIntersection(Set<K> keys, Companion<V, K> updating) =>
+      updateFrom(keysIntersectionWith(keys), updating);
+
+  Iterable<V> updateDifference(Set<K> keys, Companion<V, K> updating) =>
+      updateFrom(keysDifferenceWith(keys), updating);
+
+  ///
+  /// [mergeAs]
+  ///
+  Iterable<V> mergeAs(
+    Set<K> keys,
+    V Function(K key) valuing, {
+    Companion<V, K>? update,
+  }) sync* {
+    yield* _removeFrom(keysDifferenceWith(keys));
+    yield* updateFrom(keysIntersectionWith(keys), update ?? FCompanion.keep);
+    addAllDifference(keys, valuing);
+  }
+
+  ///
+  /// fold
+  ///
   T fold<T>(
     T initialValue,
     Companion<T, MapEntry<K, V>> foldMap,
@@ -1584,6 +1691,9 @@ extension MapExtension<K, V> on Map<K, V> {
   S foldValues<S>(S initialValue, Companion<S, V> companion) =>
       values.fold(initialValue, companion);
 
+  ///
+  /// reduce
+  ///
   K reduceKeys(Reducer<K> reducing) => keys.reduce(reducing);
 
   V reduceValues(Reducer<V> reducing) => values.reduce(reducing);
@@ -1596,4 +1706,21 @@ extension MapExtension<K, V> on Map<K, V> {
     required Translator<MapEntry<K, V>, N> translator,
   }) =>
       entries.reduceToNum(reducer: reducer, translator: translator);
+
+  ///
+  ///
+  ///
+  String join([String entrySeparator = '', String separator = '']) =>
+      entries.map((entry) => entry.join(entrySeparator)).join(separator);
+}
+
+extension MapKeyComparableExtension<K extends Comparable, V> on Map<K, V> {
+  List<K> sortedKeys([Comparator<K>? compare]) =>
+      keys.toList()..sort(compare);
+
+  Iterable<V> sortedValuesByKey([Comparator<K>? compare]) =>
+      sortedKeys(compare).map((key) => this[key]!);
+
+  Iterable<MapEntry<K, V>> sortedEntries([Comparator<K>? compare]) =>
+      sortedKeys(compare).map((key) => MapEntry(key, this[key] as V));
 }

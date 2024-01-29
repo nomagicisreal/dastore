@@ -110,8 +110,6 @@ extension SizeExtension on Size {
 }
 
 extension OffsetExtension on Offset {
-  Coordinate get toCoordinate => Coordinate.ofXY(dx, dy);
-
   ///
   ///
   /// instance methods

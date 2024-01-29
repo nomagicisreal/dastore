@@ -12,7 +12,7 @@ part 'algorithm/collection.dart';
 part 'algorithm/math.dart';
 part 'concurrent/concurrent.dart';
 part 'element/mix.dart';
-part 'element/setup.dart';
+part 'element/kit.dart';
 part 'value/constant.dart';
 part 'value/extension.dart';
 part 'value/function.dart';

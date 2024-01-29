@@ -6,11 +6,11 @@
 ///
 ///
 /// [FPredicator], [FPredicatorCombiner]
-/// [FComparatorList]
 /// [FMapper], [FMapperDouble], [FMapperCubic], [FMapperMapCubicOffset]
 /// [FGenerator], [FGeneratorOffset]
 /// [FTranslator]
 /// [FReducerNum]
+/// [FCompanion]
 ///
 ///
 ///
@@ -37,30 +37,54 @@
 ///
 part of dastore;
 
+///
+///
+/// the radian of dart and math are different, see also the comment above [Coordinate.fromDirection]
+///
+///
+
+///
+/// [radianFromAngle], [radianFromRound], ...
+/// [complementaryOf], [supplementaryOf], ...
+///
+/// [ifWithinAngle90_90N], [ifOverAngle90_90N], ...
+/// [ifInQuadrant1], [ifInQuadrant2], [ifInQuadrant3], [ifInQuadrant4]
+/// [ifOnRight], [ifOnLeft], [ifOnTop], [ifOnBottom]
+///
+///
 extension FRadian on double {
-  static double modulus1Round(double radian) => radian % KRadian.angle_360;
+  static double radianFromAngle(double angle) => angle * KRadian.angle_1;
+
+  static double radianFromRound(double round) => round * KRadian.angle_360;
 
   static double angleOf(double radian) => radian / KRadian.angle_1;
 
-  static double radianOf(double angle) => angle * KRadian.angle_1;
+  static double roundOf(double radian) => radian / KRadian.angle_360;
 
+  static double modulus90AngleOf(double radian) => radian % KRadian.angle_90;
+  static double modulus180AngleOf(double radian) => radian % KRadian.angle_180;
+  static double modulus360AngleOf(double radian) => radian % KRadian.angle_360;
+
+  ///
+  /// [complementaryOf], [supplementaryOf], [restrict180AbsForAngle]
+  ///
   static double complementaryOf(double radian) {
     assert(radian.rangeIn(0, KRadian.angle_90));
-    return radianOf(90 - angleOf(radian));
+    return radianFromAngle(90 - angleOf(radian));
   }
 
   static double supplementaryOf(double radian) {
     assert(radian.rangeIn(0, KRadian.angle_180));
-    return radianOf(180 - angleOf(radian));
+    return radianFromAngle(180 - angleOf(radian));
   }
 
-  static double restrictWithinAngle180_180N(double radian) {
-    final r = radian % 360;
+  static double restrict180AbsForAngle(double angle) {
+    final r = angle % 360;
     return r >= KRadian.angle_180 ? r - KRadian.angle_360 : r;
   }
 
   ///
-  /// if
+  /// [ifWithinAngle90_90N], [ifOverAngle90_90N], [ifWithinAngle0_180], [ifWithinAngle0_180N]
   ///
   static bool ifWithinAngle90_90N(double radian) =>
       radian.abs() < KRadian.angle_90;
@@ -74,17 +98,57 @@ extension FRadian on double {
   static bool ifWithinAngle0_180N(double radian) =>
       radian > -KRadian.angle_180 && radian < 0;
 
+  ///
+  /// [ifInQuadrant1], [ifInQuadrant2], [ifInQuadrant3], [ifInQuadrant4]
+  ///
+  static bool ifInQuadrant1(double radian, {bool isInMathDiscussion = false}) {
+    final r = modulus360AngleOf(radian);
+    return isInMathDiscussion
+        ? r.within(0, KRadian.angle_90) ||
+            r.within(-KRadian.angle_360, -KRadian.angle_270)
+        : r.within(KRadian.angle_270, KRadian.angle_360) ||
+            r.within(-KRadian.angle_90, 0);
+  }
+
+  static bool ifInQuadrant2(double radian, {bool isInMathDiscussion = false}) {
+    final r = modulus360AngleOf(radian);
+    return isInMathDiscussion
+        ? r.within(KRadian.angle_90, KRadian.angle_180) ||
+            r.within(-KRadian.angle_270, -KRadian.angle_180)
+        : r.within(KRadian.angle_180, KRadian.angle_270) ||
+            r.within(-KRadian.angle_180, -KRadian.angle_90);
+  }
+
+  static bool ifInQuadrant3(double radian, {bool isInMathDiscussion = false}) {
+    final r = modulus360AngleOf(radian);
+    return isInMathDiscussion
+        ? r.within(KRadian.angle_180, KRadian.angle_270) ||
+            r.within(-KRadian.angle_180, -KRadian.angle_90)
+        : r.within(KRadian.angle_90, KRadian.angle_180) ||
+            r.within(-KRadian.angle_270, -KRadian.angle_180);
+  }
+
+  static bool ifInQuadrant4(double radian, {bool isInMathDiscussion = false}) {
+    final r = modulus360AngleOf(radian);
+    return isInMathDiscussion
+        ? r.within(KRadian.angle_270, KRadian.angle_360) ||
+            r.within(-KRadian.angle_90, 0)
+        : r.within(0, KRadian.angle_90) ||
+            r.within(-KRadian.angle_360, -KRadian.angle_270);
+  }
+
+  ///
+  /// [ifOnRight], [ifOnLeft], [ifOnTop], [ifOnBottom]
+  /// 'right' and 'left' are the same no matter in dart or in math
+  ///
   static bool ifOnRight(double radian) =>
-      ifWithinAngle90_90N(modulus1Round(radian));
+      ifWithinAngle90_90N(modulus360AngleOf(radian));
 
   static bool ifOnLeft(double radian) =>
-      ifOverAngle90_90N(modulus1Round(radian));
+      ifOverAngle90_90N(modulus360AngleOf(radian));
 
-  static bool ifOnTop(
-    double radian, {
-    bool isInMathDiscussion = false,
-  }) {
-    final r = modulus1Round(radian);
+  static bool ifOnTop(double radian, {bool isInMathDiscussion = false}) {
+    final r = modulus360AngleOf(radian);
     return isInMathDiscussion ? ifWithinAngle0_180(r) : ifWithinAngle0_180N(r);
   }
 
@@ -92,7 +156,7 @@ extension FRadian on double {
     double radian, {
     bool isInMathDiscussion = false,
   }) {
-    final r = modulus1Round(radian);
+    final r = modulus360AngleOf(radian);
     return isInMathDiscussion ? ifWithinAngle0_180N(r) : ifWithinAngle0_180(r);
   }
 }
@@ -111,9 +175,9 @@ extension FRadianCoordinate on Coordinate {
       );
 
   static Coordinate restrictInAngle180Of(Coordinate radian) => Coordinate(
-        FRadian.restrictWithinAngle180_180N(radian.dx),
-        FRadian.restrictWithinAngle180_180N(radian.dy),
-        FRadian.restrictWithinAngle180_180N(radian.dz),
+        FRadian.restrict180AbsForAngle(radian.dx),
+        FRadian.restrict180AbsForAngle(radian.dy),
+        FRadian.restrict180AbsForAngle(radian.dz),
       );
 }
 
@@ -187,29 +251,6 @@ extension FPredicatorCombiner on PredicateCombiner<num> {
       };
 }
 
-///
-///
-///
-/// comparator
-///
-///
-///
-extension FComparatorList<C extends Comparable> on Comparator<List<C>> {
-  static Comparator<List<C>> accordinglyUntil<C extends Comparable>(
-    int index, [
-    Comparator<C>? comparator,
-  ]) {
-    final compare = comparator ?? (C a, C b) => a.compareTo(b);
-    return (a, b) {
-      int comparing(int i) {
-        final value = compare(b[i], a[i]);
-        return value == 0 && i < index ? comparing(i + 1) : value;
-      }
-
-      return comparing(0);
-    };
-  }
-}
 
 ///
 ///
@@ -265,16 +306,26 @@ extension FMapperDouble on Mapper<double> {
       operator.doubleCompanion(value);
 
   ///
-  /// sin
+  /// sin, cos
   ///
   static Mapper<double> sinFromFactor(double timeFactor, double factor) =>
       (value) => math.sin(timeFactor * value) * factor;
 
-  // return "times of period" of (0 ~ 1 ~ 1... ~ -1 ~ 0)
+  // return "times of period" of (0 ~ 1 ~ 0 ~ -1 ~ 0)
   static Mapper<double> sinFromPeriod(double times) {
     assert(times.isFinite);
     final tween = Tween(begin: 0.0, end: KRadian.angle_360 * times);
     return (value) => math.sin(tween.transform(value));
+  }
+
+  static Mapper<double> cosFromFactor(double timeFactor, double factor) =>
+          (value) => math.cos(timeFactor * value) * factor;
+
+  // return "times of period" of (1 ~ 0 ~ -1 ~ 0 ~ 1)
+  static Mapper<double> cosFromPeriod(double times) {
+    assert(times.isFinite);
+    final tween = Tween(begin: 0.0, end: KRadian.angle_360 * times);
+    return (value) => math.cos(tween.transform(value));
   }
 }
 
@@ -423,6 +474,10 @@ extension FReducerNum<N extends num> on Reducer<N> {
   static double _doubleAdding(double v1, double v2) => v1 + v2;
 
   static int _intAdding(int v1, int v2) => v1 + v2;
+}
+
+extension FCompanion on Companion {
+  static T keep<T, S>(T origin, S another) => origin;
 }
 
 ///

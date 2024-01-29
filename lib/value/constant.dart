@@ -10,7 +10,7 @@
 /// [KDirection]
 /// [KOffset], [KOffsetPermutation4], [KMapperCubicPointsPermutation]
 /// [KCoordinate], [KVector]
-/// [KRadian], [KRadianCoordinate]
+/// [KRadian]
 /// [KRadius], [KBorderRadius]
 /// [KEdgeInsets]
 ///
@@ -607,110 +607,6 @@ extension KRadian on double {
   static const angle_1 = math.pi / 180;
   static const angle_01 = angle_1 / 10;
   static const angle_001 = angle_1 / 100;
-}
-
-extension KRadianCoordinate on CoordinateRadian {
-  static const angleX_360 = CoordinateRadian.ofX(KRadian.angle_360);
-  static const angleY_360 = CoordinateRadian.ofY(KRadian.angle_360);
-  static const angleZ_360 = CoordinateRadian.ofZ(KRadian.angle_360);
-  static const angleXYZ_360 = CoordinateRadian.circle(KRadian.angle_360);
-  static const angleXY_360 =
-      CoordinateRadian.ofXY(KRadian.angle_360, KRadian.angle_360);
-  static const angleX_315 = CoordinateRadian.ofX(KRadian.angle_315);
-  static const angleY_315 = CoordinateRadian.ofY(KRadian.angle_315);
-  static const angleZ_315 = CoordinateRadian.ofZ(KRadian.angle_315);
-  static const angleXYZ_315 = CoordinateRadian.circle(KRadian.angle_315);
-  static const angleXY_315 =
-      CoordinateRadian.ofXY(KRadian.angle_315, KRadian.angle_315);
-  static const angleX_270 = CoordinateRadian.ofX(KRadian.angle_270);
-  static const angleY_270 = CoordinateRadian.ofY(KRadian.angle_270);
-  static const angleZ_270 = CoordinateRadian.ofZ(KRadian.angle_270);
-  static const angleXYZ_270 = CoordinateRadian.circle(KRadian.angle_270);
-  static const angleXY_270 =
-      CoordinateRadian.ofXY(KRadian.angle_270, KRadian.angle_270);
-  static const angleX_225 = CoordinateRadian.ofX(KRadian.angle_225);
-  static const angleY_225 = CoordinateRadian.ofY(KRadian.angle_225);
-  static const angleZ_225 = CoordinateRadian.ofZ(KRadian.angle_225);
-  static const angleXYZ_225 = CoordinateRadian.circle(KRadian.angle_225);
-  static const angleXY_225 =
-      CoordinateRadian.ofXY(KRadian.angle_225, KRadian.angle_225);
-  static const angleX_180 = CoordinateRadian.ofX(KRadian.angle_180);
-  static const angleY_180 = CoordinateRadian.ofY(KRadian.angle_180);
-  static const angleZ_180 = CoordinateRadian.ofZ(KRadian.angle_180);
-  static const angleXYZ_180 = CoordinateRadian.circle(KRadian.angle_180);
-  static const angleXY_180 =
-      CoordinateRadian.ofXY(KRadian.angle_180, KRadian.angle_180);
-  static const angleX_135 = CoordinateRadian.ofX(KRadian.angle_135);
-  static const angleY_135 = CoordinateRadian.ofY(KRadian.angle_135);
-  static const angleZ_135 = CoordinateRadian.ofZ(KRadian.angle_135);
-  static const angleXYZ_135 = CoordinateRadian.circle(KRadian.angle_135);
-  static const angleXY_135 =
-      CoordinateRadian.ofXY(KRadian.angle_135, KRadian.angle_135);
-  static const angleX_120 = CoordinateRadian.ofX(KRadian.angle_120);
-  static const angleY_120 = CoordinateRadian.ofY(KRadian.angle_120);
-  static const angleZ_120 = CoordinateRadian.ofZ(KRadian.angle_120);
-  static const angleZ_150 = CoordinateRadian.ofZ(KRadian.angle_150);
-  static const angleXYZ_120 = CoordinateRadian.circle(KRadian.angle_120);
-  static const angleXY_120 =
-      CoordinateRadian.ofXY(KRadian.angle_120, KRadian.angle_120);
-  static const angleX_90 = CoordinateRadian.ofX(KRadian.angle_90);
-  static const angleY_90 = CoordinateRadian.ofY(KRadian.angle_90);
-  static const angleZ_90 = CoordinateRadian.ofZ(KRadian.angle_90);
-  static const angleXYZ_90 = CoordinateRadian.circle(KRadian.angle_90);
-  static const angleXY_90 =
-      CoordinateRadian.ofXY(KRadian.angle_90, KRadian.angle_90);
-  static const angleYZ_90 =
-      CoordinateRadian.ofYZ(KRadian.angle_90, KRadian.angle_90);
-  static const angleXZ_90 =
-      CoordinateRadian.ofXZ(KRadian.angle_90, KRadian.angle_90);
-  static const angleX_75 = CoordinateRadian.ofX(KRadian.angle_75);
-  static const angleY_75 = CoordinateRadian.ofY(KRadian.angle_75);
-  static const angleZ_75 = CoordinateRadian.ofZ(KRadian.angle_75);
-  static const angleXYZ_75 = CoordinateRadian.circle(KRadian.angle_75);
-  static const angleXY_75 =
-      CoordinateRadian.ofXY(KRadian.angle_75, KRadian.angle_75);
-  static const angleX_60 = CoordinateRadian.ofX(KRadian.angle_60);
-  static const angleY_60 = CoordinateRadian.ofY(KRadian.angle_60);
-  static const angleZ_60 = CoordinateRadian.ofZ(KRadian.angle_60);
-  static const angleXYZ_60 = CoordinateRadian.circle(KRadian.angle_60);
-  static const angleXY_60 =
-      CoordinateRadian.ofXY(KRadian.angle_60, KRadian.angle_60);
-  static const angleX_45 = CoordinateRadian.ofX(KRadian.angle_45);
-  static const angleY_45 = CoordinateRadian.ofY(KRadian.angle_45);
-  static const angleZ_45 = CoordinateRadian.ofZ(KRadian.angle_45);
-  static const angleXYZ_45 = CoordinateRadian.circle(KRadian.angle_45);
-  static const angleXY_45 =
-      CoordinateRadian.ofXY(KRadian.angle_45, KRadian.angle_45);
-  static const angleX_30 = CoordinateRadian.ofX(KRadian.angle_30);
-  static const angleY_30 = CoordinateRadian.ofY(KRadian.angle_30);
-  static const angleZ_30 = CoordinateRadian.ofZ(KRadian.angle_30);
-  static const angleXYZ_30 = CoordinateRadian.circle(KRadian.angle_30);
-  static const angleXY_30 =
-      CoordinateRadian.ofXY(KRadian.angle_30, KRadian.angle_30);
-  static const angleX_15 = CoordinateRadian.ofX(KRadian.angle_15);
-  static const angleY_15 = CoordinateRadian.ofY(KRadian.angle_15);
-  static const angleZ_15 = CoordinateRadian.ofZ(KRadian.angle_15);
-  static const angleXYZ_15 = CoordinateRadian.circle(KRadian.angle_15);
-  static const angleXY_15 =
-      CoordinateRadian.ofXY(KRadian.angle_15, KRadian.angle_15);
-  static const angleX_10 = CoordinateRadian.ofX(KRadian.angle_10);
-  static const angleY_10 = CoordinateRadian.ofY(KRadian.angle_10);
-  static const angleZ_10 = CoordinateRadian.ofZ(KRadian.angle_10);
-  static const angleXYZ_10 = CoordinateRadian.circle(KRadian.angle_10);
-  static const angleXY_10 =
-      CoordinateRadian.ofXY(KRadian.angle_10, KRadian.angle_10);
-  static const angleX_1 = CoordinateRadian.ofX(KRadian.angle_1);
-  static const angleY_1 = CoordinateRadian.ofY(KRadian.angle_1);
-  static const angleZ_1 = CoordinateRadian.ofZ(KRadian.angle_1);
-  static const angleXYZ_1 = CoordinateRadian.circle(KRadian.angle_1);
-  static const angleXY_1 =
-      CoordinateRadian.ofXY(KRadian.angle_1, KRadian.angle_1);
-  static const angleX_01 = CoordinateRadian.ofX(KRadian.angle_01);
-  static const angleY_01 = CoordinateRadian.ofY(KRadian.angle_01);
-  static const angleZ_01 = CoordinateRadian.ofZ(KRadian.angle_01);
-  static const angleXYZ_01 = CoordinateRadian.circle(KRadian.angle_01);
-  static const angleXY_01 =
-      CoordinateRadian.ofXY(KRadian.angle_01, KRadian.angle_01);
 }
 
 ///

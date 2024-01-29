@@ -406,13 +406,14 @@ class BeatsOfInstrument extends Beats {
 }
 
 extension FTimer on Timer {
+  static final Timer zero = Timer(Duration.zero, kVoidCallback);
   static Timer _nest(
     Duration duration,
     VoidCallback listener,
     Iterable<MapEntry<Duration, VoidCallback>> children,
   ) =>
       Timer(duration, () {
-        children.isNotEmpty ? _sequence(children) : null;
+        if (children.isNotEmpty) _sequence(children);
         listener();
       });
 

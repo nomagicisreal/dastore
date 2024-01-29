@@ -20,16 +20,13 @@
 /// [Generator], [Generator2D]
 /// [Extruding2D]
 ///
+///
+///
 /// [WidgetParentBuilder]
 /// [WidgetListBuilder]
+/// [WidgetGlobalKeysBuilder]
+///
 /// [TextFormFieldValidator]
-///
-///
-///
-///
-///
-///
-///
 ///
 ///
 ///
@@ -49,7 +46,7 @@ typedef Consumer<T> = void Function(T value);
 typedef Absorber<A, B> = void Function(A a, B b);
 typedef Mapper<T> = T Function(T value);
 typedef Reducer<T> = T Function(T v1, T v2);
-typedef Companion<T, S> = T Function(T host, S value);
+typedef Companion<T, S> = T Function(T origin, S another);
 typedef Translator<T, S> = S Function(T value);
 typedef Combiner<T, S> = S Function(T v1, T v2);
 typedef Mixer<P, Q, S> = S Function(P p, Q q);
@@ -74,11 +71,22 @@ typedef Generator2D<T> = T Function(int i, int j);
 typedef Differentiator<P, Q> = int Function(P p, Q q);
 typedef Extruding2D = Rect Function(double width, double height);
 
+///
+///
+/// widget
+///
+///
 typedef WidgetParentBuilder = Widget Function(
   BuildContext context,
   List<Widget> children,
 );
 typedef WidgetListBuilder = List<Widget> Function(BuildContext context);
+
+typedef WidgetGlobalKeysBuilder<S extends State<StatefulWidget>> = Widget
+    Function(
+  BuildContext context,
+  Map<String, GlobalKey<S>> keys,
+);
 
 typedef TextFormFieldValidator = FormFieldValidator<String> Function(
   String failedMessage,

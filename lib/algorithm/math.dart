@@ -191,30 +191,22 @@ sealed class Direction<D> {
   static const coordinate_front = Coordinate.ofZ(1);
   static const coordinate_back = Coordinate.ofZ(-1);
 
-  static const coordinate_topLeft =
-      Coordinate.ofXY(-math.sqrt1_2, -math.sqrt1_2);
-  static const coordinate_topRight =
-      Coordinate.ofXY(math.sqrt1_2, -math.sqrt1_2);
+  static const coordinate_topLeft = Coordinate.ofXY(-math.sqrt1_2);
+  static const coordinate_bottomRight = Coordinate.ofXY(math.sqrt1_2);
+  static const coordinate_frontRight = Coordinate.ofXZ(math.sqrt1_2);
+  static const coordinate_frontBottom = Coordinate.ofYZ(math.sqrt1_2);
+  static const coordinate_backLeft = Coordinate.ofXZ(-math.sqrt1_2);
+  static const coordinate_backTop = Coordinate.ofYZ(-math.sqrt1_2);
+  static const coordinate_topRight = Coordinate(math.sqrt1_2, -math.sqrt1_2, 0);
+  static const coordinate_frontTop = Coordinate(0, -math.sqrt1_2, math.sqrt1_2);
   static const coordinate_bottomLeft =
-      Coordinate.ofXY(-math.sqrt1_2, math.sqrt1_2);
-  static const coordinate_bottomRight =
-      Coordinate.ofXY(math.sqrt1_2, math.sqrt1_2);
+      Coordinate(-math.sqrt1_2, math.sqrt1_2, 0);
   static const coordinate_frontLeft =
-      Coordinate.ofXZ(-math.sqrt1_2, math.sqrt1_2);
-  static const coordinate_frontTop =
-      Coordinate.ofYZ(-math.sqrt1_2, math.sqrt1_2);
-  static const coordinate_frontRight =
-      Coordinate.ofXZ(math.sqrt1_2, math.sqrt1_2);
-  static const coordinate_frontBottom =
-      Coordinate.ofYZ(math.sqrt1_2, math.sqrt1_2);
-  static const coordinate_backLeft =
-      Coordinate.ofXZ(-math.sqrt1_2, -math.sqrt1_2);
-  static const coordinate_backTop =
-      Coordinate.ofYZ(-math.sqrt1_2, -math.sqrt1_2);
+      Coordinate(-math.sqrt1_2, 0, math.sqrt1_2);
   static const coordinate_backRight =
-      Coordinate.ofXZ(math.sqrt1_2, -math.sqrt1_2);
+      Coordinate(math.sqrt1_2, 0, -math.sqrt1_2);
   static const coordinate_backBottom =
-      Coordinate.ofYZ(math.sqrt1_2, -math.sqrt1_2);
+      Coordinate(0, math.sqrt1_2, -math.sqrt1_2);
 
   static const coordinate_frontTopLeft = Coordinate(-DoubleExtension.sqrt1_3,
       -DoubleExtension.sqrt1_3, DoubleExtension.sqrt1_3);
@@ -745,11 +737,22 @@ class Coordinate extends Offset {
       : dz = z,
         super(0, 0);
 
-  const Coordinate.ofXY(super.dx, super.dy) : dz = 0;
+  const Coordinate.ofXY(double value)
+      : dz = 0,
+        super(value, value);
 
-  const Coordinate.ofYZ(double dy, this.dz) : super(0, dy);
+  const Coordinate.ofYZ(double value)
+      : dz = value,
+        super(0, value);
 
-  const Coordinate.ofXZ(double dx, this.dz) : super(dx, 0);
+  const Coordinate.ofXZ(double value)
+      : dz = value,
+        super(value, 0);
+
+  //
+  Coordinate.fromOffset(Offset offset)
+      : dz = 0,
+        super(offset.dx, offset.dy);
 
   ///
   /// it implement in 'my coordinate system', not 'dart coordinate system' ([Transform], [Matrix4], [Offset]], ...)
@@ -793,17 +796,27 @@ class Coordinate extends Offset {
   ///   * [Offset.fromDirection], [Coordinate.fromDirection]
   ///   * [Direction], [Direction3DIn6]
   ///
-  static Coordinate transferToTransformOf(Coordinate radian) => Coordinate(
-        radian.dx,
-        -radian.dz,
-        -radian.dy,
-      );
+  static Coordinate transferToTransformOf(Coordinate p) =>
+      Coordinate(p.dx, -p.dz, -p.dy);
 }
+
+///
+///
+///
+/// [CoordinateRadian]
+///
+///
+///
+
+///
+/// see also [FRadian]
+///
 
 ///
 ///
 /// [CoordinateRadian.circle], [CoordinateRadian.ofX], [CoordinateRadian.ofY], [CoordinateRadian.ofZ]; [CoordinateRadian.ofXY], [CoordinateRadian.ofYZ], [CoordinateRadian.ofXZ]
 /// [modulus90Angle], [modulus180Angle], [modulus360Angle]
+/// [zero], [angleX_1], [angleY_1], [angleZ_1]...
 ///
 class CoordinateRadian extends Coordinate {
   const CoordinateRadian(super.dx, super.dy, super.dz);
@@ -816,11 +829,11 @@ class CoordinateRadian extends Coordinate {
 
   const CoordinateRadian.ofZ(super.dz) : super.ofZ();
 
-  const CoordinateRadian.ofXY(super.dx, super.dy) : super.ofXY();
+  const CoordinateRadian.ofXY(super.value) : super.ofXY();
 
-  const CoordinateRadian.ofYZ(super.dy, super.dz) : super.ofYZ();
+  const CoordinateRadian.ofYZ(super.value) : super.ofYZ();
 
-  const CoordinateRadian.ofXZ(super.dx, super.dz) : super.ofXZ();
+  const CoordinateRadian.ofXZ(super.value) : super.ofXZ();
 
   @override
   CoordinateRadian operator +(covariant CoordinateRadian other) =>
@@ -830,23 +843,100 @@ class CoordinateRadian extends Coordinate {
   CoordinateRadian operator -(covariant CoordinateRadian other) =>
       CoordinateRadian(dx - other.dx, dy - other.dy, dz - other.dz);
 
-  Coordinate get modulus90Angle => Coordinate(
-        dx % KRadian.angle_90,
-        dy % KRadian.angle_90,
-        dz % KRadian.angle_90,
+  ///
+  /// getters
+  ///
+  CoordinateRadian get modulus90Angle => CoordinateRadian(
+        FRadian.modulus90AngleOf(dx),
+        FRadian.modulus90AngleOf(dy),
+        FRadian.modulus90AngleOf(dz),
       );
 
-  Coordinate get modulus180Angle => Coordinate(
-        dx % KRadian.angle_180,
-        dy % KRadian.angle_180,
-        dz % KRadian.angle_180,
+  CoordinateRadian get modulus180Angle => CoordinateRadian(
+        FRadian.modulus180AngleOf(dx),
+        FRadian.modulus180AngleOf(dy),
+        FRadian.modulus180AngleOf(dz),
       );
 
-  Coordinate get modulus360Angle => Coordinate(
-        dx % KRadian.angle_360,
-        dy % KRadian.angle_360,
-        dz % KRadian.angle_360,
+  CoordinateRadian get modulus360Angle => CoordinateRadian(
+        FRadian.modulus360AngleOf(dx),
+        FRadian.modulus360AngleOf(dy),
+        FRadian.modulus360AngleOf(dz),
       );
+
+  Coordinate get toAngle =>
+      Coordinate(FRadian.angleOf(dx), FRadian.angleOf(dy), FRadian.angleOf(dz));
+
+  Coordinate get toRound =>
+      Coordinate(FRadian.roundOf(dx), FRadian.roundOf(dy), FRadian.roundOf(dz));
+
+  ///
+  /// constants
+  ///
+  static const zero = CoordinateRadian.circle(0);
+  static const angleX_360 = CoordinateRadian.ofX(KRadian.angle_360);
+  static const angleY_360 = CoordinateRadian.ofY(KRadian.angle_360);
+  static const angleZ_360 = CoordinateRadian.ofZ(KRadian.angle_360);
+  static const angleXYZ_360 = CoordinateRadian.circle(KRadian.angle_360);
+  static const angleXY_360 = CoordinateRadian.ofXY(KRadian.angle_360);
+  static const angleX_270 = CoordinateRadian.ofX(KRadian.angle_270);
+  static const angleY_270 = CoordinateRadian.ofY(KRadian.angle_270);
+  static const angleZ_270 = CoordinateRadian.ofZ(KRadian.angle_270);
+  static const angleXYZ_270 = CoordinateRadian.circle(KRadian.angle_270);
+  static const angleXY_270 = CoordinateRadian.ofXY(KRadian.angle_270);
+  static const angleX_180 = CoordinateRadian.ofX(KRadian.angle_180);
+  static const angleY_180 = CoordinateRadian.ofY(KRadian.angle_180);
+  static const angleZ_180 = CoordinateRadian.ofZ(KRadian.angle_180);
+  static const angleXYZ_180 = CoordinateRadian.circle(KRadian.angle_180);
+  static const angleXY_180 = CoordinateRadian.ofXY(KRadian.angle_180);
+  static const angleX_120 = CoordinateRadian.ofX(KRadian.angle_120);
+  static const angleY_120 = CoordinateRadian.ofY(KRadian.angle_120);
+  static const angleZ_120 = CoordinateRadian.ofZ(KRadian.angle_120);
+  static const angleZ_150 = CoordinateRadian.ofZ(KRadian.angle_150);
+  static const angleXYZ_120 = CoordinateRadian.circle(KRadian.angle_120);
+  static const angleXY_120 = CoordinateRadian.ofXY(KRadian.angle_120);
+  static const angleX_90 = CoordinateRadian.ofX(KRadian.angle_90);
+  static const angleY_90 = CoordinateRadian.ofY(KRadian.angle_90);
+  static const angleZ_90 = CoordinateRadian.ofZ(KRadian.angle_90);
+  static const angleXYZ_90 = CoordinateRadian.circle(KRadian.angle_90);
+  static const angleXY_90 = CoordinateRadian.ofXY(KRadian.angle_90);
+  static const angleYZ_90 = CoordinateRadian.ofYZ(KRadian.angle_90);
+  static const angleXZ_90 = CoordinateRadian.ofXZ(KRadian.angle_90);
+  static const angleX_60 = CoordinateRadian.ofX(KRadian.angle_60);
+  static const angleY_60 = CoordinateRadian.ofY(KRadian.angle_60);
+  static const angleZ_60 = CoordinateRadian.ofZ(KRadian.angle_60);
+  static const angleXYZ_60 = CoordinateRadian.circle(KRadian.angle_60);
+  static const angleXY_60 = CoordinateRadian.ofXY(KRadian.angle_60);
+  static const angleX_45 = CoordinateRadian.ofX(KRadian.angle_45);
+  static const angleY_45 = CoordinateRadian.ofY(KRadian.angle_45);
+  static const angleZ_45 = CoordinateRadian.ofZ(KRadian.angle_45);
+  static const angleXYZ_45 = CoordinateRadian.circle(KRadian.angle_45);
+  static const angleXY_45 = CoordinateRadian.ofXY(KRadian.angle_45);
+  static const angleX_30 = CoordinateRadian.ofX(KRadian.angle_30);
+  static const angleY_30 = CoordinateRadian.ofY(KRadian.angle_30);
+  static const angleZ_30 = CoordinateRadian.ofZ(KRadian.angle_30);
+  static const angleXYZ_30 = CoordinateRadian.circle(KRadian.angle_30);
+  static const angleXY_30 = CoordinateRadian.ofXY(KRadian.angle_30);
+  static const angleX_15 = CoordinateRadian.ofX(KRadian.angle_15);
+  static const angleY_15 = CoordinateRadian.ofY(KRadian.angle_15);
+  static const angleZ_15 = CoordinateRadian.ofZ(KRadian.angle_15);
+  static const angleXYZ_15 = CoordinateRadian.circle(KRadian.angle_15);
+  static const angleXY_15 = CoordinateRadian.ofXY(KRadian.angle_15);
+  static const angleX_10 = CoordinateRadian.ofX(KRadian.angle_10);
+  static const angleY_10 = CoordinateRadian.ofY(KRadian.angle_10);
+  static const angleZ_10 = CoordinateRadian.ofZ(KRadian.angle_10);
+  static const angleXYZ_10 = CoordinateRadian.circle(KRadian.angle_10);
+  static const angleXY_10 = CoordinateRadian.ofXY(KRadian.angle_10);
+  static const angleX_1 = CoordinateRadian.ofX(KRadian.angle_1);
+  static const angleY_1 = CoordinateRadian.ofY(KRadian.angle_1);
+  static const angleZ_1 = CoordinateRadian.ofZ(KRadian.angle_1);
+  static const angleXYZ_1 = CoordinateRadian.circle(KRadian.angle_1);
+  static const angleXY_1 = CoordinateRadian.ofXY(KRadian.angle_1);
+  static const angleX_01 = CoordinateRadian.ofX(KRadian.angle_01);
+  static const angleY_01 = CoordinateRadian.ofY(KRadian.angle_01);
+  static const angleZ_01 = CoordinateRadian.ofZ(KRadian.angle_01);
+  static const angleXYZ_01 = CoordinateRadian.circle(KRadian.angle_01);
+  static const angleXY_01 = CoordinateRadian.ofXY(KRadian.angle_01);
 }
 
 ///
@@ -957,6 +1047,9 @@ class Curving extends Curve {
   Curving.sinPeriodOf(int times)
       : mapper = FMapperDouble.sinFromPeriod(times.toDouble());
 
+  Curving.cosPeriodOf(int times)
+      : mapper = FMapperDouble.cosFromPeriod(times.toDouble());
+
   @override
   double transformInternal(double t) => mapper(t);
 }
@@ -980,8 +1073,8 @@ class Combination {
 
   int get p => IntExtension.partition(m, n);
 
-  List<List<int>> get pGroups => IntExtension.partitionGroups(m, n)
-    ..sort(FComparatorList.accordinglyUntil(n - 1));
+  List<List<int>> get pGroups =>
+      IntExtension.partitionGroups(m, n)..sortAccordingly();
 
   @override
   String toString() => 'Combination(\n'
