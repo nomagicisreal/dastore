@@ -1,26 +1,30 @@
 ///
 ///
 /// this file contains:
-///
-/// [NullableExtension]
-/// [StringExtension], [MatchExtension]
-/// [SizeExtension], [OffsetExtension], [RectExtension]
-/// [AlignmentExtension]
+/// [Curving], [CurveFR], [CurveExtension]
+/// [CubicOffset]
 ///
 /// [ColorExtension]
-/// [ImageExtension]
 /// [PathExtension]
 ///
 ///
+/// [SizeExtension], [OffsetExtension], [RectExtension]
+/// [AlignmentExtension]
 ///
+///
+/// [OperatorMaterialExtension]
+/// [ImageExtension]
 ///
 /// [FocusManagerExtension], [FocusNodeExtension]
 /// [GlobalKeyExtension]
 /// [RenderBoxExtension]
 /// [PositionedExtension]
+///
 /// [BuildContextExtension]
 ///
-/// [VoidCallbackExtension]
+///
+/// [IterableOffsetExtension]
+/// [ListOffsetExtension]
 ///
 ///
 ///
@@ -33,60 +37,343 @@
 ///
 ///
 ///
-///
-///
-part of dastore;
+part of dastore_flutter;
 
-extension NullableExtension<T> on T? {
-  S? nullOr<S>(S value) => this == null ? null : value;
+extension DoubleMaterialExtension on double {
+  Radius get toCircularRadius => Radius.circular(this);
 
-  S? nullOrTranslate<S>(Translator<T, S> value) =>
-      this == null ? null : value(this as T);
+  double get clampPositive => clampDouble(this, 0.0, double.infinity);
 
-  S translateOr<S>(
-    Translator<T, S> translate, {
-    required Supplier<S> ifAbsent,
-  }) {
-    final value = this;
-    return value == null ? ifAbsent() : translate(value);
-  }
+  double get clampNegative => clampDouble(this, double.negativeInfinity, 0);
 }
 
 ///
 ///
-/// match, string
+///
+/// [Curving], [CurveFR], [CurveExtension]
 ///
 ///
+///
 
-extension StringExtension on String {
-  String get lowercaseFirstChar => replaceFirstMapped(
-      RegExp(r'[A-Z]'), (match) => match.group0.toLowerCase());
+//
+class Curving extends Curve {
+  final Mapper<double> mapper;
 
-  MapEntry<String, String> get splitByFirstSpace {
-    late final String key;
-    final value = replaceFirstMapped(RegExp(r'\w '), (match) {
-      key = match.group0.trim();
-      return '';
-    });
-    return MapEntry(key, value);
-  }
+  const Curving(this.mapper);
 
-  ///
-  /// camel, underscore usage
-  ///
+  Curving.sinPeriodOf(int times)
+      : mapper = FMapperDouble.fromPeriod(times.toDouble(), math.sin);
 
-  String get fromUnderscoreToCamelBody => splitMapJoin(RegExp(r'_[a-z]'),
-      onMatch: (match) => match.group0[1].toUpperCase());
+  Curving.cosPeriodOf(int times)
+      : mapper = FMapperDouble.fromPeriod(times.toDouble(), math.cos);
 
-  String get fromCamelToUnderscore =>
-      lowercaseFirstChar.splitMapJoin(RegExp(r'[a-z][A-Z]'), onMatch: (match) {
-        final s = match.group0;
-        return '${s[0]}_${s[1].toLowerCase()}';
-      });
+  Curving.tanPeriodOf(int times)
+      : mapper = FMapperDouble.fromPeriod(times.toDouble(), math.tan);
+
+  @override
+  double transformInternal(double t) => mapper(t);
 }
 
-extension MatchExtension on Match {
-  String get group0 => group(0)!;
+///
+/// [forward], [reverse]
+///
+/// [CurveFR.symmetry]
+/// [CurveFR.intervalFlip]
+///
+/// [fusionIntervalFlipIn]
+/// [fusionIntervalFlipForSymmetryPeriodSinIn]
+///
+/// [interval], [flipped]
+///
+class CurveFR {
+  final Curve forward;
+  final Curve reverse;
+
+  const CurveFR(this.forward, this.reverse);
+
+  const CurveFR.symmetry(Curve curve)
+      : forward = curve,
+        reverse = curve;
+
+  CurveFR.intervalFlip(CurveFR curve, double begin, double end)
+      : forward = Interval(begin, end, curve: curve.forward),
+        reverse = Interval(begin, end, curve: curve.reverse);
+
+  ///
+  /// [fusionIntervalFlipIn]
+  /// [fusionIntervalFlipForSymmetryPeriodSinIn]
+  ///
+  static Fusionor<CurveFR, double, double, CurveFR> fusionIntervalFlipIn(
+    int steps,
+  ) =>
+      (curve, begin, end) => CurveFR.intervalFlip(
+            curve,
+            begin / steps,
+            end / steps,
+          );
+
+  static Fusionor<int, double, double, CurveFR>
+      fusionIntervalFlipForSymmetryPeriodSinIn(
+    int steps,
+  ) =>
+          (times, begin, end) => CurveFR.intervalFlip(
+                CurveFR.symmetry(Curving.sinPeriodOf(times)),
+                begin / steps,
+                end / steps,
+              );
+
+  CurveFR interval(double begin, double end) => CurveFR(
+        Interval(begin, end, curve: forward),
+        Interval(begin, end, curve: reverse),
+      );
+
+  CurveFR get flipped => CurveFR(reverse, forward);
+}
+
+extension CurveExtension on Curve {
+  CurveFR get toCurveFR => CurveFR(this, this);
+}
+
+///
+///
+///
+/// [CubicOffset]
+///
+///
+///
+
+class CubicOffset {
+  final Cubic x;
+  final Cubic y;
+
+  const CubicOffset(this.x, this.y);
+
+  Offset get a => Offset(x.a, y.a);
+
+  Offset get b => Offset(x.b, y.b);
+
+  Offset get c => Offset(x.c, y.c);
+
+  Offset get d => Offset(x.d, y.d);
+
+  CubicOffset.fromPoints(List<Offset> offsets)
+      : assert(offsets.length == 4),
+        x = Cubic(offsets[0].dx, offsets[1].dx, offsets[2].dx, offsets[3].dx),
+        y = Cubic(offsets[0].dy, offsets[1].dy, offsets[2].dy, offsets[3].dy);
+
+  List<Offset> get points =>
+      [Offset(x.a, y.a), Offset(x.b, y.b), Offset(x.c, y.c), Offset(x.d, y.d)];
+
+  Offset operator [](int index) => switch (index) {
+        0 => Offset(x.a, y.a),
+        1 => Offset(x.b, y.b),
+        2 => Offset(x.c, y.c),
+        3 => Offset(x.d, y.d),
+        _ => throw UnimplementedError(index.toString()),
+      };
+
+  CubicOffset operator *(double scale) => CubicOffset(
+        Cubic(x.a * scale, x.b * scale, x.c * scale, x.d * scale),
+        Cubic(y.a * scale, y.b * scale, y.c * scale, y.d * scale),
+      );
+
+  CubicOffset mapXY(Mapper<Cubic> mapper) => CubicOffset(mapper(x), mapper(y));
+
+  CubicOffset mapX(Mapper<Cubic> mapper) => CubicOffset(mapper(x), y);
+
+  CubicOffset mapY(Mapper<Cubic> mapper) => CubicOffset(x, mapper(y));
+
+  static CubicOffset companionSizeAdjustCenter(
+    CubicOffset cubicOffset,
+    Size size,
+  ) =>
+      CubicOffset.fromPoints(
+        cubicOffset.points.adjustCenterFor(size).toList(),
+      );
+}
+
+///
+///
+///
+/// [ColorExtension], [PathExtension]
+///
+///
+
+extension ColorExtension on Color {
+  Color plusARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
+    this.alpha + alpha,
+    this.red + red,
+    this.green + green,
+    this.blue + blue,
+  );
+
+  Color minusARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
+    this.alpha - alpha,
+    this.red - red,
+    this.green - green,
+    this.blue - blue,
+  );
+
+  Color multiplyARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
+    this.alpha * alpha,
+    this.red * red,
+    this.green * green,
+    this.blue * blue,
+  );
+
+  Color divideARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
+    this.alpha ~/ alpha,
+    this.red ~/ red,
+    this.green ~/ green,
+    this.blue ~/ blue,
+  );
+
+  Color plusAllRGB(int value) =>
+      Color.fromARGB(alpha, red + value, green + value, blue + value);
+
+  Color minusAllRGB(int value) =>
+      Color.fromARGB(alpha, red - value, green - value, blue - value);
+
+  Color multiplyAllRGB(int value) =>
+      Color.fromARGB(alpha, red * value, green * value, blue * value);
+
+  Color divideAllRGB(int value) =>
+      Color.fromARGB(alpha, red ~/ value, green ~/ value, blue ~/ value);
+
+  Color operateWithValue(Operator operator, int value) => switch (operator) {
+    Operator.plus => plusARGB(0, value, value, value),
+    Operator.minus => minusARGB(0, value, value, value),
+    Operator.multiply => multiplyARGB(1, value, value, value),
+    Operator.divide => divideARGB(1, value, value, value),
+    Operator.modulus => throw UnimplementedError(),
+  };
+}
+
+///
+///
+///
+/// path
+///
+/// [moveToPoint], [lineToPoint], [moveOrLineToPoint]
+/// [lineFromAToB], [lineFromAToAll]
+/// [arcFromStartToEnd]
+///
+/// [quadraticBezierToPoint]
+/// [quadraticBezierToRelativePoint]
+/// [cubicToPoint]
+/// [cubicToRelativePoint]
+/// [cubic]
+///
+/// [addOvalFromCircle]
+/// [addRectFromPoints]
+/// [addRectFromCenter]
+/// [addRectFromLTWH]
+///
+///
+extension PathExtension on Path {
+  ///
+  /// move, line, arc
+  ///
+  void moveToPoint(Offset point) => moveTo(point.dx, point.dy);
+
+  void lineToPoint(Offset point) => lineTo(point.dx, point.dy);
+
+  void moveOrLineToPoint(Offset point, bool shouldMove) =>
+      shouldMove ? moveToPoint(point) : lineTo(point.dx, point.dy);
+
+  void lineFromAToB(Offset a, Offset b) => this
+    ..moveToPoint(a)
+    ..lineToPoint(b);
+
+  void lineFromAToAll(Offset a, Iterable<Offset> points) => points.fold<Path>(
+    this..moveToPoint(a),
+        (path, point) => path..lineToPoint(point),
+  );
+
+  void arcFromStartToEnd(
+      Offset arcStart,
+      Offset arcEnd, {
+        Radius radius = Radius.zero,
+        bool clockwise = true,
+        double rotation = 0.0,
+        bool largeArc = false,
+      }) =>
+      this
+        ..moveToPoint(arcStart)
+        ..arcToPoint(
+          arcEnd,
+          radius: radius,
+          clockwise: clockwise,
+          rotation: rotation,
+          largeArc: largeArc,
+        );
+
+  // see https://www.youtube.com/watch?v=aVwxzDHniEw for explanation of cubic bezier
+  void quadraticBezierToPoint(Offset controlPoint, Offset endPoint) =>
+      quadraticBezierTo(
+        controlPoint.dx,
+        controlPoint.dy,
+        endPoint.dx,
+        endPoint.dy,
+      );
+
+  void quadraticBezierToRelativePoint(Offset controlPoint, Offset endPoint) =>
+      relativeQuadraticBezierTo(
+        controlPoint.dx,
+        controlPoint.dy,
+        endPoint.dx,
+        endPoint.dy,
+      );
+
+  void cubicToPoint(
+      Offset controlPoint1,
+      Offset controlPoint2,
+      Offset endPoint,
+      ) =>
+      cubicTo(
+        controlPoint1.dx,
+        controlPoint1.dy,
+        controlPoint2.dx,
+        controlPoint2.dy,
+        endPoint.dx,
+        endPoint.dy,
+      );
+
+  void cubicToRelativePoint(
+      Offset controlPoint1,
+      Offset controlPoint2,
+      Offset endPoint,
+      ) =>
+      relativeCubicTo(
+        controlPoint1.dx,
+        controlPoint1.dy,
+        controlPoint2.dx,
+        controlPoint2.dy,
+        endPoint.dx,
+        endPoint.dy,
+      );
+
+  void cubic(CubicOffset offsets) => this
+    ..moveToPoint(offsets.a)
+    ..cubicToPoint(offsets.b, offsets.c, offsets.d);
+
+  ///
+  ///
+  ///
+  /// shape
+  ///
+  ///
+  ///
+  void addOvalFromCircle(Offset center, double radius) =>
+      addOval(Rect.fromCircle(center: center, radius: radius));
+
+  void addRectFromPoints(Offset a, Offset b) => addRect(Rect.fromPoints(a, b));
+
+  void addRectFromCenter(Offset center, double width, double height) =>
+      addRect(Rect.fromCenter(center: center, width: width, height: height));
+
+  void addRectFromLTWH(double left, double top, double width, double height) =>
+      addRect(Rect.fromLTWH(left, top, width, height));
 }
 
 ///
@@ -209,10 +496,10 @@ extension OffsetExtension on Offset {
       a + perpendicularUnitOf(a, b) * t;
 
   static Offset perpendicularOffsetUnitFromCenterOf(
-    Offset a,
-    Offset b,
-    double t,
-  ) =>
+      Offset a,
+      Offset b,
+      double t,
+      ) =>
       a.middleWith(b) + perpendicularUnitOf(a, b) * t;
 }
 
@@ -233,26 +520,20 @@ extension RectExtension on Rect {
 
   double get distanceDiagonal => size.diagonal;
 
-  Offset offsetOf<T>(T value) => switch (value) {
-        Alignment() => switch (value) {
-            Alignment.topLeft => topLeft,
-            Alignment.topCenter => topCenter,
-            Alignment.topRight => topRight,
-            Alignment.centerLeft => centerLeft,
-            Alignment.center => center,
-            Alignment.centerRight => centerRight,
-            Alignment.bottomLeft => bottomLeft,
-            Alignment.bottomCenter => bottomCenter,
-            Alignment.bottomRight => bottomRight,
-            _ => throw UnimplementedError(),
-          },
-        Direction() => switch (value) {
-            Direction2D() => value.di(this),
-            Direction3D() => throw UnimplementedError(),
-          },
-        _ => throw UnimplementedError(T.toString()),
-      };
+  Offset offsetFromDirection(Direction direction) => switch (direction) {
+    Direction2D() => direction.di(this),
+    Direction3D() => throw UnimplementedError(),
+  };
 }
+
+
+///
+///
+///
+/// alignment
+///
+///
+///
 
 ///
 /// [flipped]
@@ -262,9 +543,26 @@ extension RectExtension on Rect {
 ///
 /// [deviateBuilder]
 ///
+/// [parseRect]
+/// [transformFromDirection]
+///
 ///
 extension AlignmentExtension on Alignment {
   Alignment get flipped => Alignment(-x, -y);
+
+  static Alignment fromDirection(Direction2D direction) => switch (direction) {
+        Direction2DIn4() => fromDirection(direction.toDirection8),
+        Direction2DIn8() => switch (direction) {
+            Direction2DIn8.top => Alignment.topCenter,
+            Direction2DIn8.left => Alignment.centerLeft,
+            Direction2DIn8.right => Alignment.centerRight,
+            Direction2DIn8.bottom => Alignment.bottomCenter,
+            Direction2DIn8.topLeft => Alignment.topLeft,
+            Direction2DIn8.topRight => Alignment.topRight,
+            Direction2DIn8.bottomLeft => Alignment.bottomLeft,
+            Direction2DIn8.bottomRight => Alignment.bottomRight,
+          }
+      };
 
   double get radianRangeForSide {
     final boundary = radianBoundaryForSide;
@@ -324,55 +622,74 @@ extension AlignmentExtension on Alignment {
 
     return (child) => columnBuilder(child);
   }
+
+  Offset parseRect(Rect rect) => switch (this) {
+        Alignment.topLeft => rect.topLeft,
+        Alignment.topCenter => rect.topCenter,
+        Alignment.topRight => rect.topRight,
+        Alignment.centerLeft => rect.centerLeft,
+        Alignment.center => rect.center,
+        Alignment.centerRight => rect.centerRight,
+        Alignment.bottomLeft => rect.bottomLeft,
+        Alignment.bottomCenter => rect.bottomCenter,
+        Alignment.bottomRight => rect.bottomRight,
+        _ => throw UnimplementedError(),
+      };
+
+  static Transform transformFromDirection(
+      Direction3DIn6 direction, {
+        Coordinate initialRadian = Coordinate.zero,
+        double zDeep = 100,
+        required Widget child,
+      }) {
+    Matrix4 instance() => Matrix4.identity();
+    return initialRadian == Coordinate.zero
+        ? switch (direction) {
+      Direction3DIn6.front => Transform(
+        transform: instance(),
+        alignment: Alignment.center,
+        child: child,
+      ),
+      Direction3DIn6.back => Transform(
+        transform: instance()..translate(Vector3(0, 0, -zDeep)),
+        alignment: Alignment.center,
+        child: child,
+      ),
+      Direction3DIn6.left => Transform(
+        alignment: Alignment.centerLeft,
+        transform: instance()..rotateY(KRadian.angle_90),
+        child: child,
+      ),
+      Direction3DIn6.right => Transform(
+        alignment: Alignment.centerRight,
+        transform: instance()..rotateY(-KRadian.angle_90),
+        child: child,
+      ),
+      Direction3DIn6.top => Transform(
+        alignment: Alignment.topCenter,
+        transform: instance()..rotateX(-KRadian.angle_90),
+        child: child,
+      ),
+      Direction3DIn6.bottom => Transform(
+        alignment: Alignment.bottomCenter,
+        transform: instance()..rotateX(KRadian.angle_90),
+        child: child,
+      ),
+    }
+        : throw UnimplementedError();
+  }
 }
 
-extension ColorExtension on Color {
-  Color plusARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
-        this.alpha + alpha,
-        this.red + red,
-        this.green + green,
-        this.blue + blue,
-      );
-
-  Color minusARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
-        this.alpha - alpha,
-        this.red - red,
-        this.green - green,
-        this.blue - blue,
-      );
-
-  Color multiplyARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
-        this.alpha * alpha,
-        this.red * red,
-        this.green * green,
-        this.blue * blue,
-      );
-
-  Color divideARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
-        this.alpha ~/ alpha,
-        this.red ~/ red,
-        this.green ~/ green,
-        this.blue ~/ blue,
-      );
-
-  Color plusAllRGB(int value) =>
-      Color.fromARGB(alpha, red + value, green + value, blue + value);
-
-  Color minusAllRGB(int value) =>
-      Color.fromARGB(alpha, red - value, green - value, blue - value);
-
-  Color multiplyAllRGB(int value) =>
-      Color.fromARGB(alpha, red * value, green * value, blue * value);
-
-  Color divideAllRGB(int value) =>
-      Color.fromARGB(alpha, red ~/ value, green ~/ value, blue ~/ value);
-
-  Color operateWithValue(Operator operator, int value) => switch (operator) {
-        Operator.plus => plusARGB(0, value, value, value),
-        Operator.minus => minusARGB(0, value, value, value),
-        Operator.multiply => multiplyARGB(1, value, value, value),
-        Operator.divide => divideARGB(1, value, value, value),
-        Operator.modulus => throw UnimplementedError(),
+///
+/// operator, image, path
+///
+extension OperatorMaterialExtension on Operator {
+  IconData get iconData => switch (this) {
+        Operator.plus => Icons.add,
+        Operator.minus => Icons.remove,
+        Operator.multiply => CupertinoIcons.multiply,
+        Operator.divide => CupertinoIcons.divide,
+        Operator.modulus => CupertinoIcons.percent,
       };
 }
 
@@ -393,135 +710,15 @@ extension ImageExtension on Image {
 }
 
 ///
+/// focus manager, focus node, global key
 ///
-///
-/// path
-///
-///
-///
-
-extension PathExtension on Path {
-  ///
-  /// move, line, arc
-  ///
-  void moveToPoint(Offset point) => moveTo(point.dx, point.dy);
-
-  void lineToPoint(Offset point) => lineTo(point.dx, point.dy);
-
-  void moveOrLineToPoint(Offset point, bool shouldMove) =>
-      shouldMove ? moveToPoint(point) : lineTo(point.dx, point.dy);
-
-  void lineFromAToB(Offset a, Offset b) => this
-    ..moveToPoint(a)
-    ..lineToPoint(b);
-
-  void lineFromAToAll(Offset a, Iterable<Offset> points) => points.fold<Path>(
-        this..moveToPoint(a),
-        (path, point) => path..lineToPoint(point),
-      );
-
-  void arcFromStartToEnd(
-    Offset arcStart,
-    Offset arcEnd, {
-    Radius radius = Radius.zero,
-    bool clockwise = true,
-    double rotation = 0.0,
-    bool largeArc = false,
-  }) =>
-      this
-        ..moveToPoint(arcStart)
-        ..arcToPoint(
-          arcEnd,
-          radius: radius,
-          clockwise: clockwise,
-          rotation: rotation,
-          largeArc: largeArc,
-        );
-
-  // see https://www.youtube.com/watch?v=aVwxzDHniEw for explanation of cubic bezier
-  void quadraticBezierToPoint(Offset controlPoint, Offset endPoint) =>
-      quadraticBezierTo(
-        controlPoint.dx,
-        controlPoint.dy,
-        endPoint.dx,
-        endPoint.dy,
-      );
-
-  void quadraticBezierToRelativePoint(Offset controlPoint, Offset endPoint) =>
-      relativeQuadraticBezierTo(
-        controlPoint.dx,
-        controlPoint.dy,
-        endPoint.dx,
-        endPoint.dy,
-      );
-
-  void cubicToPoint(
-    Offset controlPoint1,
-    Offset controlPoint2,
-    Offset endPoint,
-  ) =>
-      cubicTo(
-        controlPoint1.dx,
-        controlPoint1.dy,
-        controlPoint2.dx,
-        controlPoint2.dy,
-        endPoint.dx,
-        endPoint.dy,
-      );
-
-  void cubicToRelativePoint(
-    Offset controlPoint1,
-    Offset controlPoint2,
-    Offset endPoint,
-  ) =>
-      relativeCubicTo(
-        controlPoint1.dx,
-        controlPoint1.dy,
-        controlPoint2.dx,
-        controlPoint2.dy,
-        endPoint.dx,
-        endPoint.dy,
-      );
-
-  void cubic(CubicOffset offsets) => this
-    ..moveToPoint(offsets.a)
-    ..cubicToPoint(offsets.b, offsets.c, offsets.d);
-
-  ///
-  ///
-  ///
-  /// shape
-  ///
-  ///
-  ///
-  void addOvalFromCircle(Offset center, double radius) =>
-      addOval(Rect.fromCircle(center: center, radius: radius));
-
-  void addRectFromPoints(Offset a, Offset b) => addRect(Rect.fromPoints(a, b));
-
-  void addRectFromCenter(Offset center, double width, double height) =>
-      addRect(Rect.fromCenter(center: center, width: width, height: height));
-
-  void addRectFromLTWH(double left, double top, double width, double height) =>
-      addRect(Rect.fromLTWH(left, top, width, height));
-}
-
-///
-///
-///
-/// material
-///
-///
-///
-///
-
 extension FocusManagerExtension on FocusManager {
   void unFocus() => primaryFocus?.unfocus();
 }
 
 extension FocusNodeExtension on FocusNode {
   VoidCallback addFocusChangedListener(VoidCallback listener) =>
-      hasFocus ? listener : kVoidCallback;
+      hasFocus ? listener : FListener.none;
 }
 
 extension GlobalKeyExtension on GlobalKey {
@@ -555,6 +752,15 @@ extension PositionedExtension on Positioned {
           ? null
           : Rect.fromLTWH(left!, top!, width!, height!);
 }
+
+///
+///
+///
+/// material
+///
+///
+///
+///
 
 ///
 /// [theme], [themeText], .... , [colorScheme]
@@ -916,6 +1122,58 @@ extension BuildContextExtension on BuildContext {
   }
 }
 
-extension VoidCallbackExtension on VoidCallback {
-  Future<void> delayed(Duration duration) => Future.delayed(duration, this);
+///
+///
+///
+/// [IterableOffsetExtension]
+/// [ListOffsetExtension]
+///
+///
+///
+///
+
+extension IterableOffsetExtension on Iterable<Offset> {
+  Iterable<Offset> scaling(double value) => map((o) => o * value);
+
+  Iterable<Offset> adjustCenterFor(
+      Size size, {
+        Offset origin = Offset.zero,
+      }) {
+    final center = size.center(origin);
+    return map((p) => p + center);
+  }
+
+  static Mapper<Iterable<Offset>> scalingMapper(double scale) => scale == 1
+      ? FMapperMaterial.ofOffsetIterable
+      : (points) => points.scaling(scale);
+
+  static Iterable<Offset> adjustCenterCompanion(
+      Iterable<Offset> points,
+      Size size,
+      ) =>
+      points.adjustCenterFor(size);
+}
+
+extension ListOffsetExtension on List<Offset> {
+  List<Offset> symmetryInsert(
+      double dPerpendicular,
+      double dParallel,
+      ) {
+    final length = this.length;
+    assert(length % 2 == 0);
+    final insertionIndex = length ~/ 2;
+
+    final begin = this[insertionIndex - 1];
+    final end = this[insertionIndex];
+
+    final unitParallel = OffsetExtension.parallelUnitOf(begin, end);
+    final point =
+        begin.middleWith(end) + unitParallel.toPerpendicular * dPerpendicular;
+
+    return this
+      ..insertAll(insertionIndex, [
+        point - unitParallel * dParallel,
+        point + unitParallel * dParallel,
+      ]);
+  }
 }

@@ -35,7 +35,7 @@
 ///
 ///
 ///
-part of dastore;
+part of dastore_flutter;
 
 
 class AnimatedOpacityIgnorePointer extends StatelessWidget {

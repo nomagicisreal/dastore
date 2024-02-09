@@ -1,31 +1,30 @@
 ///
 ///
 /// this file contains:
-///
 /// [KColor], [KColorStyle1]
 /// [KTextStyle]
-/// [KLaTexString], [KLatexStringEquation], [KLatexStringMatrix1N], [KLatexStringMatrix2N], [FLaTexString]
 ///
 /// [KSize], [KSize3Ratio4], [KSize9Ratio16], [KSize16Ratio9]
-/// [KDirection]
 /// [KOffset], [KOffsetPermutation4], [KMapperCubicPointsPermutation]
-/// [KCoordinate], [KVector]
-/// [KRadian]
+///
+/// [Coordinate], [CoordinateRadian]
+///
 /// [KRadius], [KBorderRadius]
 /// [KEdgeInsets]
+/// [KCurveFR], [KInterval]
 ///
-/// [KDuration], [KDurationFR], [KCurveFR], [KInterval]
 ///
 /// [KMaskFilter]
-///
-///
-///
-///
-///
+/// [VPaintFill], [VPaintStroke]
 ///
 /// [VThemeData]
-/// [VPaintFill], [VPaintStroke]
-/// [VRandom]
+/// [VRandomMaterial]
+///
+/// [FGeneratorRadius], [FGeneratorOffset]
+/// [FMapperMaterial], [FMapperMaterialMapCubicOffset]
+/// [FExtruding2D]
+/// [FWidgetParentBuilder]
+/// [FTextFormFieldValidator]
 ///
 ///
 ///
@@ -35,8 +34,22 @@
 ///
 ///
 ///
-part of dastore;
-// ignore_for_file: constant_identifier_names, non_constant_identifier_names
+///
+///
+///
+///
+///
+// ignore_for_file: non_constant_identifier_names
+
+part of dastore_flutter;
+
+///
+///
+///
+/// [KColor]
+///
+///
+///
 
 extension KColor on Color {
   static const pureRed = Color(0xFFff0000);
@@ -118,6 +131,14 @@ extension KColorStyle1 on Color {
   static const purpleD1 = Color(0xFF440099);
 }
 
+///
+///
+///
+/// [KTextStyle]
+///
+///
+///
+
 extension KTextStyle on TextStyle {
   static const size_10 = TextStyle(fontSize: 10);
   static const size_20 = TextStyle(fontSize: 20);
@@ -161,59 +182,6 @@ extension KTextStyle on TextStyle {
     color: Colors.grey,
     fontSize: 12,
   );
-}
-
-///
-///
-///
-///
-/// latex string
-///
-///
-///
-///
-
-extension KLaTexString on String {
-  static const quadraticRoots = r"{-b \pm \sqrt{b^2-4ac} \over 2a}";
-  static const sn = r"S_n";
-  static const x1_ = r"x_1 + x_2 + ... + x_n";
-  static const x1_3 = r"x_1 + x_2 + x_3";
-  static const x1_4 = r"x_1 + x_2 + x_3 + x_4";
-  static const x1_5 = r"x_1 + x_2 + x_3 + x_4 + x_5";
-  static const ax1_ = r"a_1x_1 + a_2x_2 + ... + a_nx_n";
-  static const ax1_3 = r"a_1x_1 + a_2x_2 + a_3x_3";
-  static const ax1_4 = r"a_1x_1 + a_2x_2 + a_3x_3 + a_4x_4";
-  static const ax1_5 = r"a_1x_1 + a_2x_2 + a_3x_3 + a_4x_4 + a_5x_5";
-}
-
-extension KLatexStringEquation on String {
-  static const quadraticRootsOfX = r"x = " + KLaTexString.quadraticRoots;
-  static const yLinearABX = r"y = a + bx";
-  static const yLinearMXK = r"y = mx + k";
-}
-
-extension KLatexStringMatrix1N on String {
-  static const y1_ = r"""\begin{bmatrix}
-  y_1\\
-  y_2\\
-  ...\\
-  y_n\\
-  \end{bmatrix}""";
-}
-
-extension KLatexStringMatrix2N on String {
-  static const const1_x1_ = r"""\begin{bmatrix}
-  1&x_1\\
-  1&x_2\\
-  ...&...\\
-  1&x_n\\
-  \end{bmatrix}""";
-}
-
-extension FLaTexString on String {
-  static String equationOf(Iterable<String> values) => values.reduce(
-        (a, b) => "$a = $b",
-      );
 }
 
 ///
@@ -537,83 +505,15 @@ extension KMapperCubicPointsPermutation on Mapper<Map<Offset, List<Offset>>> {
           .map((points, cubicPoints) => MapEntry(points, mapper(cubicPoints)));
 }
 
-extension KCoordinate on Coordinate {
-  static const cube_01 = Coordinate.cube(0.1);
-  static const cube_02 = Coordinate.cube(0.2);
-  static const cube_03 = Coordinate.cube(0.3);
-  static const cube_04 = Coordinate.cube(0.4);
-  static const cube_05 = Coordinate.cube(0.5);
-  static const cube_06 = Coordinate.cube(0.6);
-  static const cube_07 = Coordinate.cube(0.7);
-  static const cube_08 = Coordinate.cube(0.8);
-  static const cube_09 = Coordinate.cube(0.9);
-  static const cube_1 = Coordinate.cube(1);
-  static const cube_2 = Coordinate.cube(2);
-  static const cube_3 = Coordinate.cube(3);
-  static const cube_4 = Coordinate.cube(4);
-  static const cube_5 = Coordinate.cube(5);
-  static const cube_6 = Coordinate.cube(6);
-  static const cube_7 = Coordinate.cube(7);
-  static const cube_8 = Coordinate.cube(8);
-  static const cube_9 = Coordinate.cube(9);
-  static const cube_10 = Coordinate.cube(10);
-  static const cube_20 = Coordinate.cube(20);
-  static const cube_30 = Coordinate.cube(30);
-  static const cube_40 = Coordinate.cube(40);
-  static const cube_50 = Coordinate.cube(50);
-  static const cube_60 = Coordinate.cube(60);
-  static const cube_70 = Coordinate.cube(70);
-  static const cube_80 = Coordinate.cube(80);
-  static const cube_90 = Coordinate.cube(90);
-  static const cube_100 = Coordinate.cube(100);
-
-  static const x100 = Coordinate(100, 0, 0);
-  static const y100 = Coordinate(0, 100, 0);
-  static const z100 = Coordinate(0, 0, 100);
-}
-
-///
-/// positive radian means clockwise for [Transform] widget and [Offset.direction],
-/// but means counterclockwise for math discussion
-/// see also [Direction]
-///
-extension KRadian on double {
-  static const angle_450 = math.pi * 5 / 2;
-  static const angle_420 = math.pi * 7 / 3;
-  static const angle_390 = math.pi * 13 / 6;
-  static const angle_360 = math.pi * 2;
-  static const angle_315 = math.pi * 7 / 4;
-  static const angle_270 = math.pi * 3 / 2;
-  static const angle_240 = math.pi * 4 / 3;
-  static const angle_225 = math.pi * 5 / 4;
-  static const angle_180 = math.pi;
-  static const angle_150 = math.pi * 5 / 6;
-  static const angle_135 = math.pi * 3 / 4;
-  static const angle_120 = math.pi * 2 / 3;
-  static const angle_90 = math.pi / 2;
-  static const angle_85 = math.pi * 17 / 36;
-  static const angle_80 = math.pi * 4 / 9;
-  static const angle_75 = math.pi * 5 / 12;
-  static const angle_70 = math.pi * 7 / 18;
-  static const angle_60 = math.pi / 3;
-  static const angle_50 = math.pi * 5 / 18;
-  static const angle_45 = math.pi / 4;
-  static const angle_40 = math.pi * 2 / 9;
-  static const angle_30 = math.pi / 6;
-  static const angle_20 = math.pi / 9;
-  static const angle_15 = math.pi / 12;
-  static const angle_10 = math.pi / 18;
-  static const angle_5 = math.pi / 36;
-  static const angle_1 = math.pi / 180;
-  static const angle_01 = angle_1 / 10;
-  static const angle_001 = angle_1 / 100;
-}
-
 ///
 ///
 ///
 ///
-/// radius
+///
+///
+/// radius, border radius
+///
+///
 ///
 ///
 ///
@@ -649,16 +549,6 @@ extension KBorderRadius on BorderRadius {
   static const bottom_10 = BorderRadius.vertical(bottom: KRadius.circular10);
   static const top_4 = BorderRadius.vertical(top: Radius.circular(4.0));
 }
-
-///
-///
-///
-///
-/// edgeInsets
-///
-///
-///
-///
 
 extension KEdgeInsets on EdgeInsets {
   static const onlyLeft_4 = EdgeInsets.only(left: 4);
@@ -731,174 +621,7 @@ extension KEdgeInsets on EdgeInsets {
 ///
 ///
 ///
-///
-///
-///
-/// duration, curve, interval
-///
-///
-///
-///
-///
-///
-///
-
-extension KDuration on Duration {
-  static const milli5 = Duration(milliseconds: 5);
-  static const milli10 = Duration(milliseconds: 10);
-  static const milli20 = Duration(milliseconds: 20);
-  static const milli30 = Duration(milliseconds: 30);
-  static const milli40 = Duration(milliseconds: 40);
-  static const milli50 = Duration(milliseconds: 50);
-  static const milli60 = Duration(milliseconds: 60);
-  static const milli70 = Duration(milliseconds: 70);
-  static const milli80 = Duration(milliseconds: 80);
-  static const milli90 = Duration(milliseconds: 90);
-  static const milli100 = Duration(milliseconds: 100);
-  static const milli110 = Duration(milliseconds: 110);
-  static const milli120 = Duration(milliseconds: 120);
-  static const milli130 = Duration(milliseconds: 130);
-  static const milli140 = Duration(milliseconds: 140);
-  static const milli150 = Duration(milliseconds: 150);
-  static const milli160 = Duration(milliseconds: 160);
-  static const milli170 = Duration(milliseconds: 170);
-  static const milli180 = Duration(milliseconds: 180);
-  static const milli190 = Duration(milliseconds: 190);
-  static const milli200 = Duration(milliseconds: 200);
-  static const milli210 = Duration(milliseconds: 210);
-  static const milli220 = Duration(milliseconds: 220);
-  static const milli230 = Duration(milliseconds: 230);
-  static const milli240 = Duration(milliseconds: 240);
-  static const milli250 = Duration(milliseconds: 250);
-  static const milli260 = Duration(milliseconds: 260);
-  static const milli270 = Duration(milliseconds: 270);
-  static const milli280 = Duration(milliseconds: 280);
-  static const milli290 = Duration(milliseconds: 290);
-  static const milli295 = Duration(milliseconds: 295);
-  static const milli300 = Duration(milliseconds: 300);
-  static const milli306 = Duration(milliseconds: 306);
-  static const milli307 = Duration(milliseconds: 307);
-  static const milli308 = Duration(milliseconds: 308);
-  static const milli310 = Duration(milliseconds: 310);
-  static const milli320 = Duration(milliseconds: 320);
-  static const milli330 = Duration(milliseconds: 330);
-  static const milli335 = Duration(milliseconds: 335);
-  static const milli340 = Duration(milliseconds: 340);
-  static const milli350 = Duration(milliseconds: 350);
-  static const milli360 = Duration(milliseconds: 360);
-  static const milli370 = Duration(milliseconds: 370);
-  static const milli380 = Duration(milliseconds: 380);
-  static const milli390 = Duration(milliseconds: 390);
-  static const milli400 = Duration(milliseconds: 400);
-  static const milli410 = Duration(milliseconds: 410);
-  static const milli420 = Duration(milliseconds: 420);
-  static const milli430 = Duration(milliseconds: 430);
-  static const milli440 = Duration(milliseconds: 440);
-  static const milli450 = Duration(milliseconds: 450);
-  static const milli460 = Duration(milliseconds: 460);
-  static const milli466 = Duration(milliseconds: 466);
-  static const milli467 = Duration(milliseconds: 467);
-  static const milli468 = Duration(milliseconds: 468);
-  static const milli470 = Duration(milliseconds: 470);
-  static const milli480 = Duration(milliseconds: 480);
-  static const milli490 = Duration(milliseconds: 490);
-  static const milli500 = Duration(milliseconds: 500);
-  static const milli600 = Duration(milliseconds: 600);
-  static const milli700 = Duration(milliseconds: 700);
-  static const milli800 = Duration(milliseconds: 800);
-  static const milli810 = Duration(milliseconds: 810);
-  static const milli820 = Duration(milliseconds: 820);
-  static const milli830 = Duration(milliseconds: 830);
-  static const milli840 = Duration(milliseconds: 840);
-  static const milli850 = Duration(milliseconds: 850);
-  static const milli860 = Duration(milliseconds: 860);
-  static const milli870 = Duration(milliseconds: 870);
-  static const milli880 = Duration(milliseconds: 880);
-  static const milli890 = Duration(milliseconds: 890);
-  static const milli900 = Duration(milliseconds: 900);
-  static const milli910 = Duration(milliseconds: 910);
-  static const milli920 = Duration(milliseconds: 920);
-  static const milli930 = Duration(milliseconds: 930);
-  static const milli940 = Duration(milliseconds: 940);
-  static const milli950 = Duration(milliseconds: 950);
-  static const milli960 = Duration(milliseconds: 960);
-  static const milli970 = Duration(milliseconds: 970);
-  static const milli980 = Duration(milliseconds: 980);
-  static const milli990 = Duration(milliseconds: 990);
-  static const milli1100 = Duration(milliseconds: 1100);
-  static const milli1200 = Duration(milliseconds: 1200);
-  static const milli1300 = Duration(milliseconds: 1300);
-  static const milli1400 = Duration(milliseconds: 1400);
-  static const milli1500 = Duration(milliseconds: 1500);
-  static const milli1600 = Duration(milliseconds: 1600);
-  static const milli1700 = Duration(milliseconds: 1700);
-  static const milli1800 = Duration(milliseconds: 1800);
-  static const milli1900 = Duration(milliseconds: 1900);
-  static const milli1933 = Duration(milliseconds: 1933);
-  static const milli1934 = Duration(milliseconds: 1934);
-  static const milli1936 = Duration(milliseconds: 1936);
-  static const milli1940 = Duration(milliseconds: 1940);
-  static const milli1950 = Duration(milliseconds: 1950);
-  static const milli2100 = Duration(milliseconds: 2100);
-  static const milli2200 = Duration(milliseconds: 2200);
-  static const milli2300 = Duration(milliseconds: 2300);
-  static const milli2400 = Duration(milliseconds: 2400);
-  static const milli2500 = Duration(milliseconds: 2500);
-  static const milli2600 = Duration(milliseconds: 2600);
-  static const milli2700 = Duration(milliseconds: 2700);
-  static const milli2800 = Duration(milliseconds: 2800);
-  static const milli2900 = Duration(milliseconds: 2900);
-  static const milli3800 = Duration(milliseconds: 3800);
-  static const milli3822 = Duration(milliseconds: 3822);
-  static const milli3833 = Duration(milliseconds: 3833);
-  static const milli3866 = Duration(milliseconds: 3866);
-  static const milli4500 = Duration(milliseconds: 4500);
-  static const second1 = Duration(seconds: 1);
-  static const second2 = Duration(seconds: 2);
-  static const second3 = Duration(seconds: 3);
-  static const second4 = Duration(seconds: 4);
-  static const second5 = Duration(seconds: 5);
-  static const second6 = Duration(seconds: 6);
-  static const second7 = Duration(seconds: 7);
-  static const second8 = Duration(seconds: 8);
-  static const second9 = Duration(seconds: 9);
-  static const second10 = Duration(seconds: 10);
-  static const second14 = Duration(seconds: 14);
-  static const second15 = Duration(seconds: 15);
-  static const second20 = Duration(seconds: 20);
-  static const second30 = Duration(seconds: 30);
-  static const second40 = Duration(seconds: 40);
-  static const second50 = Duration(seconds: 50);
-  static const second58 = Duration(seconds: 58);
-  static const min1 = Duration(minutes: 1);
-}
-
-extension KDurationFR on DurationFR {
-  static const milli100 = DurationFR.constant(KDuration.milli100);
-  static const milli300 = DurationFR.constant(KDuration.milli300);
-  static const milli500 = DurationFR.constant(KDuration.milli500);
-  static const milli800 = DurationFR.constant(KDuration.milli800);
-  static const milli1500 = DurationFR.constant(KDuration.milli1500);
-  static const milli2500 = DurationFR.constant(KDuration.milli2500);
-  static const second1 = DurationFR.constant(KDuration.second1);
-  static const second2 = DurationFR.constant(KDuration.second2);
-  static const second3 = DurationFR.constant(KDuration.second3);
-  static const second4 = DurationFR.constant(KDuration.second4);
-  static const second5 = DurationFR.constant(KDuration.second5);
-  static const second6 = DurationFR.constant(KDuration.second6);
-  static const second7 = DurationFR.constant(KDuration.second7);
-  static const second8 = DurationFR.constant(KDuration.second8);
-  static const second9 = DurationFR.constant(KDuration.second9);
-  static const second10 = DurationFR.constant(KDuration.second10);
-  static const second20 = DurationFR.constant(KDuration.second20);
-  static const second30 = DurationFR.constant(KDuration.second30);
-  static const min1 = DurationFR.constant(KDuration.min1);
-}
-
-///
-///
-///
-/// curve
+/// curve, interval
 ///
 ///
 ///
@@ -1014,6 +737,14 @@ extension KInterval on Interval {
       Interval(0, 0.5, curve: Curves.fastOutSlowIn);
 }
 
+///
+///
+///
+/// mask filter
+///
+///
+///
+
 extension KMaskFilter on Paint {
   /// normal
   static const MaskFilter normal_05 = MaskFilter.blur(BlurStyle.normal, 0.5);
@@ -1032,13 +763,41 @@ extension KMaskFilter on Paint {
   static const MaskFilter solid_05 = MaskFilter.blur(BlurStyle.solid, 0.5);
 }
 
+//
+extension VPaintFill on Paint {
+  static Paint get _fill => Paint()..style = PaintingStyle.fill;
+
+  ///
+  /// blur
+  ///
+  static Paint get blurNormal_05 => _fill..maskFilter = KMaskFilter.normal_05;
+
+  static Paint get blurNormal_1 => _fill..maskFilter = KMaskFilter.normal_1;
+
+  static Paint get blurNormal_2 => _fill..maskFilter = KMaskFilter.normal_2;
+
+  static Paint get blurNormal_3 => _fill..maskFilter = KMaskFilter.normal_3;
+
+  static Paint get blurNormal_4 => _fill..maskFilter = KMaskFilter.normal_4;
+
+  static Paint get blurNormal_5 => _fill..maskFilter = KMaskFilter.normal_5;
+}
+
+//
+extension VPaintStroke on Paint {
+  static Paint get _stroke => Paint()..style = PaintingStyle.stroke;
+
+  static Paint get capRound => _stroke..strokeCap = StrokeCap.round;
+
+  static Paint get capSquare => _stroke..strokeCap = StrokeCap.square;
+
+  static Paint get capButt => _stroke..strokeCap = StrokeCap.butt;
+}
+
 ///
 ///
 ///
-///
-/// values
-///
-///
+/// theme
 ///
 ///
 ///
@@ -1087,132 +846,11 @@ extension VThemeData on ThemeData {
       );
 }
 
-extension VPaintFill on Paint {
-  static Paint get _fill => Paint()..style = PaintingStyle.fill;
-
-  ///
-  /// blur
-  ///
-  static Paint get blurNormal_05 => _fill..maskFilter = KMaskFilter.normal_05;
-
-  static Paint get blurNormal_1 => _fill..maskFilter = KMaskFilter.normal_1;
-
-  static Paint get blurNormal_2 => _fill..maskFilter = KMaskFilter.normal_2;
-
-  static Paint get blurNormal_3 => _fill..maskFilter = KMaskFilter.normal_3;
-
-  static Paint get blurNormal_4 => _fill..maskFilter = KMaskFilter.normal_4;
-
-  static Paint get blurNormal_5 => _fill..maskFilter = KMaskFilter.normal_5;
-
-  ///
-  /// colored
-  ///
-  static Paint get black => _fill..color = Colors.black;
-
-  static Paint get white => _fill..color = Colors.white;
-
-  static Paint get red => _fill..color = Colors.red;
-
-  static Paint get orange => _fill..color = Colors.orange;
-
-  static Paint get yellow => _fill..color = Colors.yellow;
-
-  static Paint get green => _fill..color = Colors.green;
-
-  static Paint get blue => _fill..color = Colors.blue;
-
-  static Paint get blueAccent => _fill..color = Colors.blueAccent;
-
-  static Paint get purple => _fill..color = Colors.purple;
-}
-
-extension VPaintStroke on Paint {
-  static Paint get _stroke => Paint()..style = PaintingStyle.stroke;
-
-  static Paint get capRound => _stroke..strokeCap = StrokeCap.round;
-
-  static Paint get capSquare => _stroke..strokeCap = StrokeCap.square;
-
-  static Paint get capButt => _stroke..strokeCap = StrokeCap.butt;
-
-  static Paint get eraser => _stroke
-    ..color = Colors.transparent
-    ..blendMode = BlendMode.clear;
-}
-
 ///
-/// [binary]
-/// [int2], [int3], ...
-/// [double02], [double03], ...
 /// [colorPrimary], ...
 /// [fabLocation]
 ///
-///
-///
-extension VRandom on math.Random {
-  static bool get binary => math.Random().nextBool();
-
-  static int get int2 => math.Random().nextInt(2);
-
-  static int get int3 => math.Random().nextInt(3);
-
-  static int get int4 => math.Random().nextInt(4);
-
-  static int get int5 => math.Random().nextInt(5);
-
-  static int get int6 => math.Random().nextInt(6);
-
-  static int get int7 => math.Random().nextInt(7);
-
-  static int get int8 => math.Random().nextInt(8);
-
-  static int get int9 => math.Random().nextInt(9);
-
-  static int get int10 => math.Random().nextInt(10);
-
-  static int get int20 => math.Random().nextInt(20);
-
-  static int get int30 => math.Random().nextInt(30);
-
-  static int get int40 => math.Random().nextInt(40);
-
-  static int get int50 => math.Random().nextInt(50);
-
-  static int get int100 => math.Random().nextInt(100);
-
-  static double get double02 => math.Random().nextInt(2) * 0.1;
-
-  static double get double03 => math.Random().nextInt(3) * 0.1;
-
-  static double get double04 => math.Random().nextInt(4) * 0.1;
-
-  static double get double05 => math.Random().nextInt(5) * 0.1;
-
-  static double get double06 => math.Random().nextInt(6) * 0.1;
-
-  static double get double07 => math.Random().nextInt(7) * 0.1;
-
-  static double get double08 => math.Random().nextInt(8) * 0.1;
-
-  static double get double09 => math.Random().nextInt(9) * 0.1;
-
-  static double get double002 => math.Random().nextInt(2) * 0.01;
-
-  static double get double003 => math.Random().nextInt(3) * 0.01;
-
-  static double get double004 => math.Random().nextInt(4) * 0.01;
-
-  static double get double005 => math.Random().nextInt(5) * 0.01;
-
-  static double get double006 => math.Random().nextInt(6) * 0.01;
-
-  static double get double007 => math.Random().nextInt(7) * 0.01;
-
-  static double get double008 => math.Random().nextInt(8) * 0.01;
-
-  static double get double009 => math.Random().nextInt(9) * 0.01;
-
+extension VRandomMaterial on math.Random {
   ///
   /// material
   ///
@@ -1238,4 +876,257 @@ extension VRandom on math.Random {
 
   static FloatingActionButtonLocation get fabLocation =>
       _fabLocations[math.Random().nextInt(10)];
+}
+
+///
+///
+///
+///
+///
+///
+
+extension FGeneratorRadius on Generator<Radius> {
+  static Generator<Radius> fillCircular(double radius) =>
+          (_) => Radius.circular(radius);
+}
+
+extension FGeneratorOffset on Generator<Offset> {
+  static Generator<Offset> withValue(
+      double value,
+      GeneratorTranslator<double, Offset> generator,
+      ) =>
+          (index) => generator(index, value);
+
+  static Generator<Offset> leftRightLeftRight(
+      double dX,
+      double dY, {
+        required Offset topLeft,
+        required Offset Function(int line, double dX, double dY) left,
+        required Offset Function(int line, double dX, double dY) right,
+      }) =>
+          (i) {
+        final indexLine = i ~/ 2;
+        return topLeft +
+            (i % 2 == 0 ? left(indexLine, dX, dY) : right(indexLine, dX, dY));
+      };
+
+  static Generator<Offset> grouping2({
+    required double dX,
+    required double dY,
+    required int modulusX,
+    required int modulusY,
+    required double constantX,
+    required double constantY,
+    required double group2ConstantX,
+    required double group2ConstantY,
+    required int group2ThresholdX,
+    required int group2ThresholdY,
+  }) =>
+          (index) => Offset(
+        constantX +
+            (index % modulusX) * dX +
+            (index > group2ThresholdX ? group2ConstantX : 0),
+        constantY +
+            (index % modulusY) * dY +
+            (index > group2ThresholdY ? group2ConstantY : 0),
+      );
+
+  static Generator<Offset> topBottomStyle1(double group2ConstantY) => grouping2(
+    dX: 78,
+    dY: 12,
+    modulusX: 6,
+    modulusY: 24,
+    constantX: -25,
+    constantY: -60,
+    group2ConstantX: 0,
+    group2ConstantY: group2ConstantY,
+    group2ThresholdX: 0,
+    group2ThresholdY: 11,
+  );
+}
+
+
+extension FMapperMaterial on Mapper {
+  static Offset offset(Offset v) => v;
+
+  static Iterable<Offset> ofOffsetIterable(Iterable<Offset> v) => v;
+
+  static Coordinate ofCoordinate(Coordinate v) => v;
+
+  static Size ofSize(Size v) => v;
+
+  static Curve ofCurve(Curve v) => v;
+
+  static Curve ofCurveFlipped(Curve v) => v.flipped;
+
+  static BoxConstraints ofBoxConstraints(BoxConstraints v) => v;
+
+  static BoxConstraints boxConstraintsLoosen(BoxConstraints constraints) =>
+      constraints.loosen();
+
+  static Cubic cubic_0231(Cubic cubic) =>
+      Cubic(cubic.a, cubic.c, cubic.d, cubic.b);
+
+  static Cubic cubic_1230(Cubic cubic) =>
+      Cubic(cubic.b, cubic.c, cubic.d, cubic.a);
+}
+
+extension FMapperMaterialMapCubicOffset on Mapper<Map<Offset, CubicOffset>> {
+  static Map<Offset, CubicOffset> aCdB(Map<Offset, CubicOffset> points) =>
+      points.map(
+            (current, cubics) => MapEntry(
+          current,
+          cubics.mapXY(FMapperMaterial.cubic_0231),
+        ),
+      );
+
+  static Mapper<Map<Offset, CubicOffset>> of(Mapper<Cubic> mapper) =>
+          (corners) => corners.map(
+            (p, cubics) => MapEntry(p, cubics.mapXY(mapper)),
+      );
+}
+
+///
+///
+/// [FExtruding2D]
+///
+///
+
+///
+/// static methods:
+/// [directOnSize], [directOnWidth], [directByDimension]
+/// [fromRectDirection]
+///
+/// instance methods:
+/// [translateOnSize], [translateOnWidth], [translateOfDimension]
+///
+///
+extension FExtruding2D on Extruding2D {
+  static Translator<double, Rect> directOnSize({
+    required Rect rect,
+    required Direction2D direction,
+    required double width,
+    required double height,
+    bool timesOrPlus = true,
+  }) =>
+      fromRectDirection(rect, direction).translateOnSize(
+        width,
+        height,
+        timesOrPlus: timesOrPlus,
+      );
+
+  static Translator<double, Rect> directOnWidth({
+    required Rect rect,
+    required Direction2D direction,
+    required double width,
+  }) =>
+      fromRectDirection(rect, direction).translateOnWidth(width);
+
+  static Translator<double, Rect> directByDimension({
+    required Rect rect,
+    required Direction2D direction,
+    required double dimension,
+    bool timesOrPlus = true,
+  }) =>
+      fromRectDirection(rect, direction).translateOfDimension(
+        dimension,
+        timesOrPlus: timesOrPlus,
+      );
+
+  static Extruding2D fromRectDirection(Rect rect, Direction2D direction) =>
+      switch (direction) {
+        Direction2DIn4.top || Direction2DIn8.top => () {
+          final origin = rect.topCenter;
+          return (width, length) => Rect.fromPoints(
+            origin + Offset(width / 2, 0),
+            origin + Offset(-width / 2, -length),
+          );
+        }(),
+        Direction2DIn4.left || Direction2DIn8.left => () {
+          final origin = rect.centerLeft;
+          return (width, length) => Rect.fromPoints(
+            origin + Offset(0, width / 2),
+            origin + Offset(-length, -width / 2),
+          );
+        }(),
+        Direction2DIn4.right || Direction2DIn8.right => () {
+          final origin = rect.centerRight;
+          return (width, length) => Rect.fromPoints(
+            origin + Offset(0, width / 2),
+            origin + Offset(length, -width / 2),
+          );
+        }(),
+        Direction2DIn4.bottom || Direction2DIn8.bottom => () {
+          final origin = rect.bottomCenter;
+          return (width, length) => Rect.fromPoints(
+            origin + Offset(width / 2, 0),
+            origin + Offset(-width / 2, length),
+          );
+        }(),
+        Direction2DIn8.topLeft => () {
+          final origin = rect.topLeft;
+          return (width, length) => Rect.fromPoints(
+            origin,
+            origin + Offset(-length, -length) * DoubleExtension.sqrt1_2,
+          );
+        }(),
+        Direction2DIn8.topRight => () {
+          final origin = rect.topRight;
+          return (width, length) => Rect.fromPoints(
+            origin,
+            origin + Offset(length, -length) * DoubleExtension.sqrt1_2,
+          );
+        }(),
+        Direction2DIn8.bottomLeft => () {
+          final origin = rect.bottomLeft;
+          return (width, length) => Rect.fromPoints(
+            origin,
+            origin + Offset(-length, length) * DoubleExtension.sqrt1_2,
+          );
+        }(),
+        Direction2DIn8.bottomRight => () {
+          final origin = rect.bottomRight;
+          return (width, length) => Rect.fromPoints(
+            origin,
+            origin + Offset(length, length) * DoubleExtension.sqrt1_2,
+          );
+        }(),
+      };
+
+  ///
+  /// when [timesOrPlus] == true, its means that extruding value will be multiplied on [height]
+  /// when [timesOrPlus] == false, its means that extruding value will be added on [height]
+  ///
+  Translator<double, Rect> translateOnSize(
+      double width,
+      double height, {
+        bool timesOrPlus = true,
+      }) {
+    final calculating = timesOrPlus ? (v) => height * v : (v) => height + v;
+    return (value) => this(width, calculating(value));
+  }
+
+  Translator<double, Rect> translateOnWidth(double width) =>
+      translateOnSize(width, 0, timesOrPlus: false);
+
+  Translator<double, Rect> translateOfDimension(
+      double dimension, {
+        bool timesOrPlus = true,
+      }) =>
+      translateOnSize(dimension, dimension, timesOrPlus: timesOrPlus);
+}
+
+
+
+extension FWidgetParentBuilder on WidgetParentBuilder {
+  WidgetBuilder builderFrom(Iterable<WidgetBuilder> children) =>
+      (context) => this(context, [...children.map((build) => build(context))]);
+}
+
+extension FTextFormFieldValidator on TextFormFieldValidator {
+  static FormFieldValidator<String> validateNullOrEmpty(
+    String validationFailedMessage,
+  ) =>
+      (value) =>
+          value == null || value.isEmpty ? validationFailedMessage : null;
 }

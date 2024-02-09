@@ -7,6 +7,7 @@
 ///
 ///
 /// [GlobalKeysWidget]
+/// [StreamWidget]
 ///
 ///
 ///
@@ -34,8 +35,7 @@
 ///
 ///
 ///
-///
-part of dastore;
+part of dastore_flutter;
 
 class IconAction {
   final Icon icon;
@@ -69,11 +69,13 @@ extension IterableIconAction on Iterable<IconAction> {
   }
 }
 
-
 ///
 ///
 ///
-
+/// [GlobalKeysWidget]
+///
+///
+///
 class GlobalKeysWidget<S extends State<StatefulWidget>> extends StatefulWidget {
   const GlobalKeysWidget({
     super.key,
@@ -85,8 +87,8 @@ class GlobalKeysWidget<S extends State<StatefulWidget>> extends StatefulWidget {
   final WidgetGlobalKeysBuilder<S> builder;
 
   static GlobalKey<S> toGlobalKey<S extends State<StatefulWidget>>(
-      String key,
-      ) =>
+    String key,
+  ) =>
       GlobalKey<S>(debugLabel: key);
 
   @override
@@ -115,4 +117,53 @@ class _GlobalKeysWidgetState<S extends State<StatefulWidget>>
 
   @override
   Widget build(BuildContext context) => widget.builder(context, keys);
+}
+
+///
+///
+/// [StreamWidget]
+///
+///
+class StreamWidget<T> extends StatelessWidget {
+  const StreamWidget({
+    super.key,
+    this.initialData,
+    this.waitingDataBuilder,
+    this.activeBuilder,
+    this.doneConnectBuilder,
+    this.noneConnectionBuilder,
+    required this.stream,
+    required this.builder,
+    this.child,
+  });
+
+  final T? initialData;
+  final Stream<T> stream;
+  final ValueWidgetBuilder<T?> builder;
+  final ValueWidgetBuilder<T?>? activeBuilder;
+  final ValueWidgetBuilder<T?>? waitingDataBuilder;
+  final ValueWidgetBuilder<T?>? doneConnectBuilder;
+  final ValueWidgetBuilder<T?>? noneConnectionBuilder;
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<T>(
+      initialData: initialData,
+      stream: stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          throw UnimplementedError(snapshot.error.toString());
+        }
+        final status = snapshot.connectionState;
+        return (switch (status) {
+              ConnectionState.none => noneConnectionBuilder,
+              ConnectionState.waiting => waitingDataBuilder,
+              ConnectionState.active => activeBuilder,
+              ConnectionState.done => doneConnectBuilder,
+            } ??
+            this.builder)(context, snapshot.data, child);
+      },
+    );
+  }
 }

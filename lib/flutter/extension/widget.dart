@@ -35,7 +35,7 @@
 ///
 ///
 ///
-part of dastore;
+part of dastore_flutter;
 
 ///
 ///
@@ -306,6 +306,42 @@ extension WWidgetBuilder on WidgetBuilder {
   static Widget none(BuildContext context) => WSizedBox.none;
 
   static Widget noneAnimation(Animation animation, Widget child) => child;
+
+  static Widget progressing(BuildContext _) => WProgressIndicator.circular;
+
+  static List<Widget> sandwich({
+    Axis direction = Axis.vertical,
+    VerticalDirection verticalDirection = VerticalDirection.down,
+    MainAxisAlignment mainAxisAlignment = MainAxisAlignment.center,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+    MainAxisSize mainAxisSize = MainAxisSize.max,
+    Clip clipBehavior = Clip.none,
+    TextDirection textDirection = TextDirection.ltr,
+    TextBaseline? textBaseline,
+    required int breadCount,
+    required Generator<Widget> bread,
+    required Generator<Widget> meat,
+  }) {
+    List<Widget> children(int index) => [
+          bread(index),
+          if (index < breadCount - 1) meat(index),
+        ];
+
+    return List<Widget>.generate(
+      breadCount,
+      (index) => Flex(
+        direction: direction,
+        mainAxisAlignment: mainAxisAlignment,
+        mainAxisSize: mainAxisSize,
+        crossAxisAlignment: crossAxisAlignment,
+        textDirection: textDirection,
+        verticalDirection: verticalDirection,
+        textBaseline: textBaseline,
+        clipBehavior: clipBehavior,
+        children: children(index),
+      ),
+    );
+  }
 }
 
 extension WImageLoadingBuilder on ImageLoadingBuilder {

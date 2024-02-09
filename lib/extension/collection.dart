@@ -6,12 +6,12 @@
 ///
 ///
 /// [IterableExtension]
-/// [IterableIntExtension], [IterableDoubleExtension], [IterableOffsetExtension], [IterableTimerExtension]
+/// [IterableIntExtension], [IterableDoubleExtension], [IterableTimerExtension]
 /// [IterableIterableExtension], [IterableSetExtension]
 ///
 ///
 /// [ListExtension]
-/// [ListOffsetExtension], [ListComparableExtension]
+/// [ListComparableExtension]
 /// [ListListExtension], [ListListComparableExtension], [ListSetExtension]
 ///
 ///
@@ -21,8 +21,6 @@
 /// [MapEntryIterableExtension]
 /// [MapExtension]
 /// [MapKeyComparableExtension]
-///
-///
 ///
 ///
 ///
@@ -94,13 +92,7 @@ extension DoubleExtension on double {
   static const double sqrt1_8 = 0.3535533905932738;
   static const double sqrt1_10 = 0.31622776601683794;
 
-  Radius get toCircularRadius => Radius.circular(this);
-
   bool get isNearlyInt => (ceil() - this) <= 0.01;
-
-  double get clampPositive => clampDouble(this, 0.0, double.infinity);
-
-  double get clampNegative => clampDouble(this, double.negativeInfinity, 0);
 
   ///
   /// infinity usages
@@ -962,27 +954,6 @@ extension IterableDoubleExtension on Iterable<double> {
   double get sum => reduce((value, element) => value + element);
 }
 
-extension IterableOffsetExtension on Iterable<Offset> {
-  Iterable<Offset> scaling(double value) => map((o) => o * value);
-
-  Iterable<Offset> adjustCenterFor(
-    Size size, {
-    Offset origin = Offset.zero,
-  }) {
-    final center = size.center(origin);
-    return map((p) => p + center);
-  }
-
-  static Mapper<Iterable<Offset>> scalingMapper(double scale) =>
-      scale == 1 ? FMapper.ofOffsetIterable : (points) => points.scaling(scale);
-
-  static Iterable<Offset> adjustCenterCompanion(
-    Iterable<Offset> points,
-    Size size,
-  ) =>
-      points.adjustCenterFor(size);
-}
-
 extension IterableTimerExtension on Iterable<Timer> {
   void cancelAll() {
     for (var t in this) {
@@ -1053,7 +1024,7 @@ extension IterableSetExtension<I> on Iterable<Set<I>> {
 /// [fillUntil]
 /// [copy], [copyFillUntil], ...
 /// [reversedExceptFirst]
-/// [rearrangeAs]
+/// [copyInOrder]
 /// [intersectionWith]
 /// [differenceWith], [differenceIndexWith]
 /// [combine]
@@ -1214,21 +1185,23 @@ extension ListExtension<T> on List<T> {
   ///
   ///
   /// overall operations
-  /// [rearrangeAs]
+  /// [copyInOrder]
   /// [split], [splitTwo]
   ///
 
   ///
   /// list = [2, 3, 4, 6];
-  /// list.rearrangeAs([2, 1, 0, 3]); // [4, 3, 2, 6]
+  /// list.copyInOrder([2, 1, 0, 3]); // [4, 3, 2, 6]
   ///
-  List<T> rearrangeAs(Set<int> newIndex) {
+  List<T> copyInOrder(Iterable<int> order) {
     final length = this.length;
-    assert(newIndex.every((element) => element < length && element > -1));
+    assert(Iterable.generate(length).everyElementsAreEqualWith(
+      order.toList(growable: false)..sort(),
+    ));
 
     final list = <T>[];
-    for (var index = 0; index < length; index++) {
-      list.add(this[newIndex.firstWhere((i) => i == index)]);
+    for (var i in order) {
+      list.add(this[i]);
     }
     return list;
   }
@@ -1303,30 +1276,6 @@ extension ListExtension<T> on List<T> {
     }
 
     return difference;
-  }
-}
-
-extension ListOffsetExtension on List<Offset> {
-  List<Offset> symmetryInsert(
-    double dPerpendicular,
-    double dParallel,
-  ) {
-    final length = this.length;
-    assert(length % 2 == 0);
-    final insertionIndex = length ~/ 2;
-
-    final begin = this[insertionIndex - 1];
-    final end = this[insertionIndex];
-
-    final unitParallel = OffsetExtension.parallelUnitOf(begin, end);
-    final point =
-        begin.middleWith(end) + unitParallel.toPerpendicular * dPerpendicular;
-
-    return this
-      ..insertAll(insertionIndex, [
-        point - unitParallel * dParallel,
-        point + unitParallel * dParallel,
-      ]);
   }
 }
 
@@ -1515,6 +1464,7 @@ extension ListListComparableExtension<C extends Comparable> on List<List<C>> {
         final value = comparing(b[i], a[i]);
         return value == 0 && i < maxIndex ? compareFrom(i + 1) : value;
       }
+
       return compareFrom(0);
     });
   }
@@ -1715,8 +1665,7 @@ extension MapExtension<K, V> on Map<K, V> {
 }
 
 extension MapKeyComparableExtension<K extends Comparable, V> on Map<K, V> {
-  List<K> sortedKeys([Comparator<K>? compare]) =>
-      keys.toList()..sort(compare);
+  List<K> sortedKeys([Comparator<K>? compare]) => keys.toList()..sort(compare);
 
   Iterable<V> sortedValuesByKey([Comparator<K>? compare]) =>
       sortedKeys(compare).map((key) => this[key]!);
