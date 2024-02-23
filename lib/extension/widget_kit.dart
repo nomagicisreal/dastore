@@ -35,7 +35,7 @@
 ///
 ///
 ///
-part of dastore_flutter;
+part of dastore;
 
 class IconAction {
   final Icon icon;

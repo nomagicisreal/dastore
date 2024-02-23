@@ -1,26 +1,26 @@
 ///
 ///
 /// this file contains:
+/// [Curving], [CurveFR], [CurveExtension]
 ///
-/// [Operator]
+/// [ColorExtension]
+/// [PathExtension]
 ///
+/// [OperatorMaterialExtension]
+/// [ImageExtension]
 ///
-/// [Combination]
+/// [FocusManagerExtension], [FocusNodeExtension]
+/// [GlobalKeyExtension]
+/// [RenderBoxExtension]
+/// [PositionedExtension]
 ///
-///
-///
-///
-/// [KLaTexString], [KLatexStringEquation], [KLatexStringMatrix1N], [KLatexStringMatrix2N], [FLaTexString]
-///
-/// [KRadian]
-///
-/// [VRandom]
-///
-///
+/// [BuildContextExtension]
 ///
 ///
-/// [NullableExtension]
-/// [StringExtension], [MatchExtension]
+///
+///
+///
+///
 ///
 ///
 ///
@@ -36,361 +36,728 @@
 ///
 ///
 part of dastore;
-// ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
-enum Operator {
-  plus,
-  minus,
-  multiply,
-  divide,
-  modulus,
-  ;
+extension DoubleMaterialExtension on double {
+  Radius get toCircularRadius => Radius.circular(this);
 
-  @override
-  String toString() => switch (this) {
-    Operator.plus => '+',
-    Operator.minus => '-',
-    Operator.multiply => '*',
-    Operator.divide => '/',
-    Operator.modulus => '%',
-  };
+  double get clampPositive => clampDouble(this, 0.0, double.infinity);
 
-  String get latex => switch (this) {
-    Operator.plus => r'+',
-    Operator.minus => r'-',
-    Operator.multiply => r'\times',
-    Operator.divide => r'\div',
-    Operator.modulus => throw UnimplementedError(),
-  };
-
-  ///
-  /// latex operation
-  ///
-  String latexOperationOf(String a, String b) => "$a $latex $b";
-
-  String latexOperationOfDouble(double a, double b, {int fix = 0}) =>
-      "${a.toStringAsFixed(fix)} "
-          "$latex "
-          "${b.toStringAsFixed(fix)}";
-
-  ///
-  /// operate value
-  ///
-  double operateDouble(double a, double b) => switch (this) {
-    Operator.plus => a + b,
-    Operator.minus => a - b,
-    Operator.multiply => a * b,
-    Operator.divide => a / b,
-    Operator.modulus => a % b,
-  };
-
-  static double operateDoubleAll(
-      double value,
-      Iterable<MapEntry<Operator, double>> operations,
-      ) =>
-      operations.fold(
-        value,
-            (a, operation) => switch (operation.key) {
-          Operator.plus => a + operation.value,
-          Operator.minus => a - operation.value,
-          Operator.multiply => a * operation.value,
-          Operator.divide => a / operation.value,
-          Operator.modulus => a % operation.value,
-        },
-      );
-
-  Duration operateDuration(Duration a, Duration b) => switch (this) {
-    Operator.plus => a + b,
-    Operator.minus => a - b,
-    _ => throw UnimplementedError(),
-  };
-
-  DurationFR operateDurationFR(DurationFR a, DurationFR b) => switch (this) {
-    Operator.plus =>
-        DurationFR(a.forward + b.forward, a.reverse + b.reverse),
-    Operator.minus =>
-        DurationFR(a.forward - b.forward, a.reverse - b.reverse),
-    _ => throw UnimplementedError(),
-  };
-
-  T operationOf<T>(T a, T b) => switch (a) {
-    double _ => operateDouble(a, b as double),
-    Duration _ => operateDuration(a, b as Duration),
-    DurationFR _ => operateDurationFR(a, b as DurationFR),
-    _ => throw UnimplementedError(),
-  } as T;
-
-  ///
-  /// mapper
-  ///
-
-  double Function(double value) doubleCompanion(double b) => switch (this) {
-    Operator.plus => (a) => a + b,
-    Operator.minus => (a) => a - b,
-    Operator.multiply => (a) => a * b,
-    Operator.divide => (a) => a / b,
-    Operator.modulus => (a) => a % b,
-  };
+  double get clampNegative => clampDouble(this, double.negativeInfinity, 0);
 }
 
-
 ///
 ///
 ///
-/// [Combination]
+/// [Curving], [CurveFR], [CurveExtension]
 ///
 ///
 ///
 
 //
-class Combination {
-  final int m;
-  final int n;
+class Curving extends Curve {
+  final Mapper<double> mapper;
 
-  const Combination(this.m, this.n) : assert(m >= 0 && n <= m);
+  const Curving(this.mapper);
 
-  int get c => IntExtension.binomialCoefficient(m, n + 1);
+  Curving.sinPeriodOf(int times)
+      : mapper = FMapperDouble.fromPeriod(times.toDouble(), math.sin);
 
-  int get p => IntExtension.partition(m, n);
+  Curving.cosPeriodOf(int times)
+      : mapper = FMapperDouble.fromPeriod(times.toDouble(), math.cos);
 
-  List<List<int>> get pGroups =>
-      IntExtension.partitionGroups(m, n)..sortAccordingly();
+  Curving.tanPeriodOf(int times)
+      : mapper = FMapperDouble.fromPeriod(times.toDouble(), math.tan);
 
   @override
-  String toString() => 'Combination(\n'
-      '($m, $n), c: $c\n'
-      'p: $p------${pGroups.fold('', (a, b) => '$a \n $b')}\n'
-      ')';
+  double transformInternal(double t) => mapper(t);
+}
+
+///
+/// [forward], [reverse]
+///
+/// [CurveFR.symmetry]
+/// [CurveFR.intervalFlip]
+///
+/// [fusionIntervalFlipIn]
+/// [fusionIntervalFlipForSymmetryPeriodSinIn]
+///
+/// [interval], [flipped]
+///
+class CurveFR {
+  final Curve forward;
+  final Curve reverse;
+
+  const CurveFR(this.forward, this.reverse);
+
+  const CurveFR.symmetry(Curve curve)
+      : forward = curve,
+        reverse = curve;
+
+  CurveFR.intervalFlip(CurveFR curve, double begin, double end)
+      : forward = Interval(begin, end, curve: curve.forward),
+        reverse = Interval(begin, end, curve: curve.reverse);
+
+  ///
+  /// [fusionIntervalFlipIn]
+  /// [fusionIntervalFlipForSymmetryPeriodSinIn]
+  ///
+  static Fusionor<CurveFR, double, double, CurveFR> fusionIntervalFlipIn(
+    int steps,
+  ) =>
+      (curve, begin, end) => CurveFR.intervalFlip(
+            curve,
+            begin / steps,
+            end / steps,
+          );
+
+  static Fusionor<int, double, double, CurveFR>
+      fusionIntervalFlipForSymmetryPeriodSinIn(
+    int steps,
+  ) =>
+          (times, begin, end) => CurveFR.intervalFlip(
+                CurveFR.symmetry(Curving.sinPeriodOf(times)),
+                begin / steps,
+                end / steps,
+              );
+
+  CurveFR interval(double begin, double end) => CurveFR(
+        Interval(begin, end, curve: forward),
+        Interval(begin, end, curve: reverse),
+      );
+
+  CurveFR get flipped => CurveFR(reverse, forward);
+}
+
+extension CurveExtension on Curve {
+  CurveFR get toCurveFR => CurveFR(this, this);
 }
 
 
+
 ///
 ///
 ///
-///
-/// latex string
-///
-///
+/// [ColorExtension], [PathExtension]
 ///
 ///
 
-extension KLaTexString on String {
-  static const quadraticRoots = r"{-b \pm \sqrt{b^2-4ac} \over 2a}";
-  static const sn = r"S_n";
-  static const x1_ = r"x_1 + x_2 + ... + x_n";
-  static const x1_3 = r"x_1 + x_2 + x_3";
-  static const x1_4 = r"x_1 + x_2 + x_3 + x_4";
-  static const x1_5 = r"x_1 + x_2 + x_3 + x_4 + x_5";
-  static const ax1_ = r"a_1x_1 + a_2x_2 + ... + a_nx_n";
-  static const ax1_3 = r"a_1x_1 + a_2x_2 + a_3x_3";
-  static const ax1_4 = r"a_1x_1 + a_2x_2 + a_3x_3 + a_4x_4";
-  static const ax1_5 = r"a_1x_1 + a_2x_2 + a_3x_3 + a_4x_4 + a_5x_5";
-}
-
-extension KLatexStringEquation on String {
-  static const quadraticRootsOfX = r"x = " + KLaTexString.quadraticRoots;
-  static const yLinearABX = r"y = a + bx";
-  static const yLinearMXK = r"y = mx + k";
-}
-
-extension KLatexStringMatrix1N on String {
-  static const y1_ = r"""\begin{bmatrix}
-  y_1\\
-  y_2\\
-  ...\\
-  y_n\\
-  \end{bmatrix}""";
-}
-
-extension KLatexStringMatrix2N on String {
-  static const const1_x1_ = r"""\begin{bmatrix}
-  1&x_1\\
-  1&x_2\\
-  ...&...\\
-  1&x_n\\
-  \end{bmatrix}""";
-}
-
-extension FLaTexString on String {
-  static String equationOf(Iterable<String> values) => values.reduce(
-        (a, b) => "$a = $b",
+extension ColorExtension on Color {
+  Color plusARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
+    this.alpha + alpha,
+    this.red + red,
+    this.green + green,
+    this.blue + blue,
   );
-}
 
-///
-/// positive radian means clockwise for [Transform] widget and [Offset.direction],
-/// but means counterclockwise for math discussion
-/// see also [Direction]
-///
-extension KRadian on double {
-  static const angle_450 = math.pi * 5 / 2;
-  static const angle_420 = math.pi * 7 / 3;
-  static const angle_390 = math.pi * 13 / 6;
-  static const angle_360 = math.pi * 2;
-  static const angle_315 = math.pi * 7 / 4;
-  static const angle_270 = math.pi * 3 / 2;
-  static const angle_240 = math.pi * 4 / 3;
-  static const angle_225 = math.pi * 5 / 4;
-  static const angle_180 = math.pi;
-  static const angle_150 = math.pi * 5 / 6;
-  static const angle_135 = math.pi * 3 / 4;
-  static const angle_120 = math.pi * 2 / 3;
-  static const angle_90 = math.pi / 2;
-  static const angle_85 = math.pi * 17 / 36;
-  static const angle_80 = math.pi * 4 / 9;
-  static const angle_75 = math.pi * 5 / 12;
-  static const angle_70 = math.pi * 7 / 18;
-  static const angle_60 = math.pi / 3;
-  static const angle_50 = math.pi * 5 / 18;
-  static const angle_45 = math.pi / 4;
-  static const angle_40 = math.pi * 2 / 9;
-  static const angle_30 = math.pi / 6;
-  static const angle_20 = math.pi / 9;
-  static const angle_15 = math.pi / 12;
-  static const angle_10 = math.pi / 18;
-  static const angle_5 = math.pi / 36;
-  static const angle_1 = math.pi / 180;
-  static const angle_01 = angle_1 / 10;
-  static const angle_001 = angle_1 / 100;
-}
+  Color minusARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
+    this.alpha - alpha,
+    this.red - red,
+    this.green - green,
+    this.blue - blue,
+  );
 
+  Color multiplyARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
+    this.alpha * alpha,
+    this.red * red,
+    this.green * green,
+    this.blue * blue,
+  );
 
-///
-///
-///
-///
-/// [binary]
-/// [int2], [int3], ...
-/// [double02], [double03], ...
-///
-///
-///
-extension VRandom on math.Random {
-  static bool get binary => math.Random().nextBool();
+  Color divideARGB(int alpha, int red, int green, int blue) => Color.fromARGB(
+    this.alpha ~/ alpha,
+    this.red ~/ red,
+    this.green ~/ green,
+    this.blue ~/ blue,
+  );
 
-  static int get int2 => math.Random().nextInt(2);
+  Color plusAllRGB(int value) =>
+      Color.fromARGB(alpha, red + value, green + value, blue + value);
 
-  static int get int3 => math.Random().nextInt(3);
+  Color minusAllRGB(int value) =>
+      Color.fromARGB(alpha, red - value, green - value, blue - value);
 
-  static int get int4 => math.Random().nextInt(4);
+  Color multiplyAllRGB(int value) =>
+      Color.fromARGB(alpha, red * value, green * value, blue * value);
 
-  static int get int5 => math.Random().nextInt(5);
+  Color divideAllRGB(int value) =>
+      Color.fromARGB(alpha, red ~/ value, green ~/ value, blue ~/ value);
 
-  static int get int6 => math.Random().nextInt(6);
-
-  static int get int7 => math.Random().nextInt(7);
-
-  static int get int8 => math.Random().nextInt(8);
-
-  static int get int9 => math.Random().nextInt(9);
-
-  static int get int10 => math.Random().nextInt(10);
-
-  static int get int20 => math.Random().nextInt(20);
-
-  static int get int30 => math.Random().nextInt(30);
-
-  static int get int40 => math.Random().nextInt(40);
-
-  static int get int50 => math.Random().nextInt(50);
-
-  static int get int100 => math.Random().nextInt(100);
-
-  static double get double02 => math.Random().nextInt(2) * 0.1;
-
-  static double get double03 => math.Random().nextInt(3) * 0.1;
-
-  static double get double04 => math.Random().nextInt(4) * 0.1;
-
-  static double get double05 => math.Random().nextInt(5) * 0.1;
-
-  static double get double06 => math.Random().nextInt(6) * 0.1;
-
-  static double get double07 => math.Random().nextInt(7) * 0.1;
-
-  static double get double08 => math.Random().nextInt(8) * 0.1;
-
-  static double get double09 => math.Random().nextInt(9) * 0.1;
-
-  static double get double002 => math.Random().nextInt(2) * 0.01;
-
-  static double get double003 => math.Random().nextInt(3) * 0.01;
-
-  static double get double004 => math.Random().nextInt(4) * 0.01;
-
-  static double get double005 => math.Random().nextInt(5) * 0.01;
-
-  static double get double006 => math.Random().nextInt(6) * 0.01;
-
-  static double get double007 => math.Random().nextInt(7) * 0.01;
-
-  static double get double008 => math.Random().nextInt(8) * 0.01;
-
-  static double get double009 => math.Random().nextInt(9) * 0.01;
+  Color operateWithValue(Operator operator, int value) => switch (operator) {
+    Operator.plus => plusARGB(0, value, value, value),
+    Operator.minus => minusARGB(0, value, value, value),
+    Operator.multiply => multiplyARGB(1, value, value, value),
+    Operator.divide => divideARGB(1, value, value, value),
+    Operator.modulus => throw UnimplementedError(),
+  };
 }
 
 ///
 ///
 ///
+/// path
+///
+/// [moveToPoint], [lineToPoint], [moveOrLineToPoint]
+/// [lineFromAToB], [lineFromAToAll]
+/// [arcFromStartToEnd]
+///
+/// [quadraticBezierToPoint]
+/// [quadraticBezierToRelativePoint]
+/// [cubicToPoint]
+/// [cubicToRelativePoint]
+/// [cubic]
+///
+/// [addOvalFromCircle]
+/// [addRectFromPoints]
+/// [addRectFromCenter]
+/// [addRectFromLTWH]
 ///
 ///
-/// extension
+extension PathExtension on Path {
+  ///
+  /// move, line, arc
+  ///
+  void moveToPoint(Offset point) => moveTo(point.dx, point.dy);
+
+  void lineToPoint(Offset point) => lineTo(point.dx, point.dy);
+
+  void moveOrLineToPoint(Offset point, bool shouldMove) =>
+      shouldMove ? moveToPoint(point) : lineTo(point.dx, point.dy);
+
+  void lineFromAToB(Offset a, Offset b) => this
+    ..moveToPoint(a)
+    ..lineToPoint(b);
+
+  void lineFromAToAll(Offset a, Iterable<Offset> points) => points.fold<Path>(
+    this..moveToPoint(a),
+        (path, point) => path..lineToPoint(point),
+  );
+
+  void arcFromStartToEnd(
+      Offset arcStart,
+      Offset arcEnd, {
+        Radius radius = Radius.zero,
+        bool clockwise = true,
+        double rotation = 0.0,
+        bool largeArc = false,
+      }) =>
+      this
+        ..moveToPoint(arcStart)
+        ..arcToPoint(
+          arcEnd,
+          radius: radius,
+          clockwise: clockwise,
+          rotation: rotation,
+          largeArc: largeArc,
+        );
+
+  // see https://www.youtube.com/watch?v=aVwxzDHniEw for explanation of cubic bezier
+  void quadraticBezierToPoint(Offset controlPoint, Offset endPoint) =>
+      quadraticBezierTo(
+        controlPoint.dx,
+        controlPoint.dy,
+        endPoint.dx,
+        endPoint.dy,
+      );
+
+  void quadraticBezierToRelativePoint(Offset controlPoint, Offset endPoint) =>
+      relativeQuadraticBezierTo(
+        controlPoint.dx,
+        controlPoint.dy,
+        endPoint.dx,
+        endPoint.dy,
+      );
+
+  void cubicToPoint(
+      Offset controlPoint1,
+      Offset controlPoint2,
+      Offset endPoint,
+      ) =>
+      cubicTo(
+        controlPoint1.dx,
+        controlPoint1.dy,
+        controlPoint2.dx,
+        controlPoint2.dy,
+        endPoint.dx,
+        endPoint.dy,
+      );
+
+  void cubicToRelativePoint(
+      Offset controlPoint1,
+      Offset controlPoint2,
+      Offset endPoint,
+      ) =>
+      relativeCubicTo(
+        controlPoint1.dx,
+        controlPoint1.dy,
+        controlPoint2.dx,
+        controlPoint2.dy,
+        endPoint.dx,
+        endPoint.dy,
+      );
+
+  void cubic(CubicOffset offsets) => this
+    ..moveToPoint(offsets.a)
+    ..cubicToPoint(offsets.b, offsets.c, offsets.d);
+
+  ///
+  ///
+  ///
+  /// shape
+  ///
+  ///
+  ///
+  void addOvalFromCircle(Offset center, double radius) =>
+      addOval(Rect.fromCircle(center: center, radius: radius));
+
+  void addRectFromPoints(Offset a, Offset b) => addRect(Rect.fromPoints(a, b));
+
+  void addRectFromCenter(Offset center, double width, double height) =>
+      addRect(Rect.fromCenter(center: center, width: width, height: height));
+
+  void addRectFromLTWH(double left, double top, double width, double height) =>
+      addRect(Rect.fromLTWH(left, top, width, height));
+}
+
+
+///
+/// operator, image, path
+///
+extension OperatorMaterialExtension on Operator {
+  IconData get iconData => switch (this) {
+        Operator.plus => Icons.add,
+        Operator.minus => Icons.remove,
+        Operator.multiply => CupertinoIcons.multiply,
+        Operator.divide => CupertinoIcons.divide,
+        Operator.modulus => CupertinoIcons.percent,
+      };
+}
+
+extension ImageExtension on Image {
+  static assetsInDimension(
+    String path,
+    double dimension, {
+    Alignment alignment = Alignment.center,
+    FilterQuality filterQuality = FilterQuality.medium,
+  }) =>
+      Image.asset(
+        path,
+        height: dimension,
+        width: dimension,
+        alignment: alignment,
+        filterQuality: filterQuality,
+      );
+}
+
+///
+/// focus manager, focus node, global key
+///
+extension FocusManagerExtension on FocusManager {
+  void unFocus() => primaryFocus?.unfocus();
+}
+
+extension FocusNodeExtension on FocusNode {
+  VoidCallback addFocusChangedListener(VoidCallback listener) =>
+      hasFocus ? listener : FListener.none;
+}
+
+extension GlobalKeyExtension on GlobalKey {
+  RenderBox get renderBox => currentContext?.findRenderObject() as RenderBox;
+
+  Rect get renderRect => renderBox.fromLocalToGlobalRect;
+
+  Offset adjustScaffoldOf(Offset offset) {
+    final translation = currentContext
+        ?.findRenderObject()
+        ?.getTransformTo(null)
+        .getTranslation();
+
+    return translation == null
+        ? offset
+        : Offset(
+            offset.dx - translation.x,
+            offset.dy - translation.y,
+          );
+  }
+}
+
+extension RenderBoxExtension on RenderBox {
+  Rect get fromLocalToGlobalRect =>
+      RectExtension.fromOffsetSize(localToGlobal(Offset.zero), size);
+}
+
+extension PositionedExtension on Positioned {
+  Rect? get rect =>
+      (left == null || top == null || width == null || height == null)
+          ? null
+          : Rect.fromLTWH(left!, top!, width!, height!);
+}
+
 ///
 ///
+///
+/// material
 ///
 ///
 ///
 ///
 
-extension NullableExtension<T> on T? {
-  S? nullOr<S>(S value) => this == null ? null : value;
+///
+/// [theme], [themeText], .... , [colorScheme]
+/// [mediaSize], [mediaViewInsets]
+/// [isKeyboardShowing]
+///
+/// [renderBox]
+/// [scaffold], [scaffoldMessenger]
+/// [navigator]
+///
+/// [closeKeyboardIfShowing]
+/// [showSnackbar], [showSnackbarWithMessage]
+/// [showDialogGenericStyle1], [showDialogGenericStyle2], [showDialogListAndGetItem], [showDialogDecideTureOfFalse]
+///
+extension BuildContextExtension on BuildContext {
+  // AppLocalizations get loc => AppLocalizations.of(this)!;
 
-  S? nullOrTranslate<S>(Translator<T, S> value) =>
-      this == null ? null : value(this as T);
+  ///
+  ///
+  ///
+  ///
+  /// theme
+  ///
+  ///
+  ///
+  ///
 
-  S translateOr<S>(
-    Translator<T, S> translate, {
-    required Supplier<S> ifAbsent,
+  ThemeData get theme => Theme.of(this);
+
+  TargetPlatform get platform => theme.platform;
+
+  IconThemeData get themeIcon => theme.iconTheme;
+
+  TextTheme get themeText => theme.textTheme;
+
+  AppBarTheme get themeAppBar => theme.appBarTheme;
+
+  BadgeThemeData get themeBadge => theme.badgeTheme;
+
+  MaterialBannerThemeData get themeBanner => theme.bannerTheme;
+
+  BottomAppBarTheme get themeBottomAppBar => theme.bottomAppBarTheme;
+
+  BottomNavigationBarThemeData get themeBottomNavigationBar =>
+      theme.bottomNavigationBarTheme;
+
+  BottomSheetThemeData get themeBottomSheet => theme.bottomSheetTheme;
+
+  ButtonBarThemeData get themeButtonBar => theme.buttonBarTheme;
+
+  ButtonThemeData get themeButton => theme.buttonTheme;
+
+  CardTheme get themeCard => theme.cardTheme;
+
+  CheckboxThemeData get themeCheckbox => theme.checkboxTheme;
+
+  ChipThemeData get themeChip => theme.chipTheme;
+
+  DataTableThemeData get themeDataTable => theme.dataTableTheme;
+
+  DatePickerThemeData get themeDatePicker => theme.datePickerTheme;
+
+  DialogTheme get themeDialog => theme.dialogTheme;
+
+  DividerThemeData get themeDivider => theme.dividerTheme;
+
+  DrawerThemeData get themeDrawer => theme.drawerTheme;
+
+  DropdownMenuThemeData get themeDropdownMenu => theme.dropdownMenuTheme;
+
+  ElevatedButtonThemeData get themeElevatedButton => theme.elevatedButtonTheme;
+
+  ExpansionTileThemeData get themeExpansionTile => theme.expansionTileTheme;
+
+  FilledButtonThemeData get themeFilledButton => theme.filledButtonTheme;
+
+  FloatingActionButtonThemeData get themeFloatingActionButton =>
+      theme.floatingActionButtonTheme;
+
+  IconButtonThemeData get themeIconButton => theme.iconButtonTheme;
+
+  ListTileThemeData get themeListTile => theme.listTileTheme;
+
+  MenuBarThemeData get themeMenuBar => theme.menuBarTheme;
+
+  MenuButtonThemeData get themeMenuButton => theme.menuButtonTheme;
+
+  MenuThemeData get themeMenu => theme.menuTheme;
+
+  NavigationBarThemeData get themeNavigationBar => theme.navigationBarTheme;
+
+  NavigationDrawerThemeData get themeNavigationDrawer =>
+      theme.navigationDrawerTheme;
+
+  NavigationRailThemeData get themeNavigationRail => theme.navigationRailTheme;
+
+  OutlinedButtonThemeData get themeOutlinedButton => theme.outlinedButtonTheme;
+
+  PopupMenuThemeData get themePopupMenu => theme.popupMenuTheme;
+
+  ProgressIndicatorThemeData get themeProgressIndicator =>
+      theme.progressIndicatorTheme;
+
+  RadioThemeData get themeRadio => theme.radioTheme;
+
+  SearchBarThemeData get themeSearchBar => theme.searchBarTheme;
+
+  SearchViewThemeData get themeSearchView => theme.searchViewTheme;
+
+  SegmentedButtonThemeData get themeSegmentedButton =>
+      theme.segmentedButtonTheme;
+
+  SliderThemeData get themeSlider => theme.sliderTheme;
+
+  SnackBarThemeData get themeSnackBar => theme.snackBarTheme;
+
+  SwitchThemeData get themeSwitch => theme.switchTheme;
+
+  TabBarTheme get themeTabBar => theme.tabBarTheme;
+
+  TextButtonThemeData get themeTextButton => theme.textButtonTheme;
+
+  TextSelectionThemeData get themeTextSelection => theme.textSelectionTheme;
+
+  TimePickerThemeData get themeTimePicker => theme.timePickerTheme;
+
+  ToggleButtonsThemeData get themeToggleButtons => theme.toggleButtonsTheme;
+
+  TooltipThemeData get themeTooltip => theme.tooltipTheme;
+
+  ColorScheme get colorScheme => theme.colorScheme;
+
+  ///
+  ///
+  ///
+  ///
+  /// material
+  ///
+  ///
+  ///
+  ///
+
+  Size get mediaSize => MediaQuery.sizeOf(this);
+
+  Size get renderBoxSize => renderBox.size;
+
+  EdgeInsets get mediaViewInsets => MediaQuery.viewInsetsOf(this);
+
+  double get mediaViewInsetsBottom => mediaViewInsets.bottom;
+
+  bool get isKeyboardShowing => mediaViewInsetsBottom > 0;
+
+  RenderBox get renderBox => findRenderObject() as RenderBox;
+
+  ScaffoldState get scaffold => Scaffold.of(this);
+
+  ScaffoldMessengerState get scaffoldMessenger => ScaffoldMessenger.of(this);
+
+  NavigatorState get navigator => Navigator.of(this);
+
+  DefaultTextStyle get defaultTextStyle => DefaultTextStyle.of(this);
+
+  TextDirection get textDirection => Directionality.of(this);
+
+  TextStyle defaultTextStyleMerge(TextStyle? other) {
+    final style = defaultTextStyle.style;
+    return style.inherit ? style.merge(other) : style;
+  }
+
+  void pop() => Navigator.pop(this);
+
+  void closeKeyboardIfShowing() {
+    if (isKeyboardShowing) {
+      FocusScopeNode currentFocus = FocusScope.of(this);
+      if (!currentFocus.hasPrimaryFocus) {
+        currentFocus.unfocus();
+      }
+    }
+  }
+
+  ///
+  ///
+  ///
+  /// insert overlay, show snackbar, material banner, dialog
+  ///
+  ///
+  ///
+
+  /// snackbar
+  void showSnackbar(SnackBar snackBar) =>
+      scaffoldMessenger.showSnackBar(snackBar);
+
+  void showSnackbarWithMessage(
+    String? message, {
+    bool isCenter = true,
+    bool showWhetherMessageIsNull = false,
+    Duration duration = KDuration.second1,
+    Color? backgroundColor,
+    SnackBarBehavior behavior = SnackBarBehavior.floating,
   }) {
-    final value = this;
-    return value == null ? ifAbsent() : translate(value);
+    if (showWhetherMessageIsNull || message != null) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          backgroundColor: backgroundColor ?? theme.cardColor,
+          behavior: behavior,
+          duration: duration,
+          content: isCenter
+              ? Center(child: Text(message ?? ''))
+              : Text(message ?? ''),
+        ),
+      );
+    }
   }
-}
 
-///
-///
-/// match, string
-///
-///
+  /// material banner
+  void showMaterialBanner(MaterialBanner banner) =>
+      ScaffoldMessenger.of(this).showMaterialBanner(banner);
 
-extension StringExtension on String {
-  String get lowercaseFirstChar => replaceFirstMapped(
-      RegExp(r'[A-Z]'), (match) => match.group0.toLowerCase());
+  void hideMaterialBanner({
+    MaterialBannerClosedReason reason = MaterialBannerClosedReason.dismiss,
+  }) =>
+      ScaffoldMessenger.of(this).hideCurrentMaterialBanner(reason: reason);
 
-  MapEntry<String, String> get splitByFirstSpace {
-    late final String key;
-    final value = replaceFirstMapped(RegExp(r'\w '), (match) {
-      key = match.group0.trim();
-      return '';
+  /// dialog
+  Future<T?> showDialogGenericStyle1<T>({
+    required String title,
+    required String content,
+    required Supplier<Map<String, T>> optionsBuilder,
+  }) {
+    final options = optionsBuilder();
+    return showDialog(
+      context: this,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: options.keys
+            .map((optionTitle) => TextButton(
+                  onPressed: () => context.navigator.pop(
+                    options[optionTitle],
+                  ),
+                  child: Text(optionTitle),
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  Future<T?> showDialogGenericStyle2<T>({
+    required String title,
+    required String? content,
+    required Map<String, T Function()> actionTitleAndActions,
+  }) async {
+    final actions = <Widget>[];
+    T? returnValue;
+    actionTitleAndActions.forEach((label, action) {
+      actions.add(TextButton(
+        onPressed: () {
+          navigator.pop();
+          returnValue = action();
+        },
+        child: Text(label),
+      ));
     });
-    return MapEntry(key, value);
+    await showDialog(
+        context: this,
+        builder: (context) => content == null
+            ? SimpleDialog(title: Text(title), children: actions)
+            : AlertDialog(
+                title: Text(title),
+                content: Text(content),
+                actions: actions,
+              ));
+    return returnValue;
   }
 
-  ///
-  /// camel, underscore usage
-  ///
+  void showDialogStyle3(
+    String text,
+    VoidCallback? onEnsure, {
+    Widget? content,
+    String messageEnsure = '確認',
+  }) {
+    showDialog<void>(
+      context: this,
+      builder: (context) {
+        return AlertDialog(
+          content: content ?? Text(text),
+          actions: [
+            if (onEnsure != null)
+              TextButton(
+                onPressed: onEnsure,
+                child: Text(messageEnsure),
+              ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('關閉'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-  String get fromUnderscoreToCamelBody => splitMapJoin(RegExp(r'_[a-z]'),
-      onMatch: (match) => match.group0[1].toUpperCase());
+  Future<T?> showDialogListAndGetItem<T>({
+    required String title,
+    required List<T> itemList,
+  }) async {
+    late final T? selectedItem;
+    await showDialog(
+      context: this,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SizedBox(
+          height: 200,
+          width: 100,
+          child: ListView.builder(
+            itemCount: itemList.length,
+            itemBuilder: (context, index) {
+              final item = itemList[index];
+              return Center(
+                child: TextButton(
+                  onPressed: () {
+                    selectedItem = item;
+                    context.navigator.pop();
+                  },
+                  child: Text(item.toString()),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    return selectedItem;
+  }
 
-  String get fromCamelToUnderscore =>
-      lowercaseFirstChar.splitMapJoin(RegExp(r'[a-z][A-Z]'), onMatch: (match) {
-        final s = match.group0;
-        return '${s[0]}_${s[1].toLowerCase()}';
-      });
-}
-
-extension MatchExtension on Match {
-  String get group0 => group(0)!;
+  Future<bool?> showDialogDecideTureOfFalse() async {
+    bool? result;
+    await showDialog(
+        context: this,
+        builder: (context) => SimpleDialog(
+              children: [
+                TextButton(
+                  onPressed: () {
+                    result = true;
+                    context.navigator.pop();
+                  },
+                  child: WIconMaterial.check,
+                ),
+                TextButton(
+                  onPressed: () {
+                    result = false;
+                    context.navigator.pop();
+                  },
+                  child: WIconMaterial.cross,
+                ),
+              ],
+            ));
+    return result;
+  }
 }
 

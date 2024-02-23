@@ -1,10 +1,8 @@
+import 'package:damath/damath.dart';
 import 'package:dastore/dastore.dart';
-import 'package:dastore/flutter/dastore.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  // Tween().lerp(t)
-  // Tween().transform(t)
   runApp(const MyApp());
 }
 
@@ -38,7 +36,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.grey,
       floatingActionButton: FloatingActionButton(onPressed: toggle),
       body: StreamWidget(
-        stream: VStream.ofInts(),
+        stream: FStream.ofInts(),
         builder: (context, value, child) => Center(
           child: Text(
             '$value',

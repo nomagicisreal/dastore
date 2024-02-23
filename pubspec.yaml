@@ -1,6 +1,6 @@
 name: dastore
 description: general constant, value, function for flutter development
-version: 0.0.14
+version: 0.0.15
 repository: https://github.com/nomagicisreal/dastore
 
 environment:
@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   cupertino_icons: ^1.0.6
+  damath: ^0.0.4
   flutter:
     sdk: flutter
 

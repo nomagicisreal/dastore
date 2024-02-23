@@ -7,8 +7,6 @@
 /// [KSize], [KSize3Ratio4], [KSize9Ratio16], [KSize16Ratio9]
 /// [KOffset], [KOffsetPermutation4], [KMapperCubicPointsPermutation]
 ///
-/// [Coordinate], [CoordinateRadian]
-///
 /// [KRadius], [KBorderRadius]
 /// [KEdgeInsets]
 /// [KCurveFR], [KInterval]
@@ -20,9 +18,10 @@
 /// [VThemeData]
 /// [VRandomMaterial]
 ///
-/// [FGeneratorRadius], [FGeneratorOffset]
-/// [FMapperMaterial], [FMapperMaterialMapCubicOffset]
+/// [FMapperMaterial]
+///
 /// [FExtruding2D]
+///
 /// [FWidgetParentBuilder]
 /// [FTextFormFieldValidator]
 ///
@@ -41,7 +40,7 @@
 ///
 // ignore_for_file: non_constant_identifier_names
 
-part of dastore_flutter;
+part of dastore;
 
 ///
 ///
@@ -885,105 +884,38 @@ extension VRandomMaterial on math.Random {
 ///
 ///
 
-extension FGeneratorRadius on Generator<Radius> {
-  static Generator<Radius> fillCircular(double radius) =>
-          (_) => Radius.circular(radius);
-}
-
-extension FGeneratorOffset on Generator<Offset> {
-  static Generator<Offset> withValue(
-      double value,
-      GeneratorTranslator<double, Offset> generator,
-      ) =>
-          (index) => generator(index, value);
-
-  static Generator<Offset> leftRightLeftRight(
-      double dX,
-      double dY, {
-        required Offset topLeft,
-        required Offset Function(int line, double dX, double dY) left,
-        required Offset Function(int line, double dX, double dY) right,
-      }) =>
-          (i) {
-        final indexLine = i ~/ 2;
-        return topLeft +
-            (i % 2 == 0 ? left(indexLine, dX, dY) : right(indexLine, dX, dY));
-      };
-
-  static Generator<Offset> grouping2({
-    required double dX,
-    required double dY,
-    required int modulusX,
-    required int modulusY,
-    required double constantX,
-    required double constantY,
-    required double group2ConstantX,
-    required double group2ConstantY,
-    required int group2ThresholdX,
-    required int group2ThresholdY,
-  }) =>
-          (index) => Offset(
-        constantX +
-            (index % modulusX) * dX +
-            (index > group2ThresholdX ? group2ConstantX : 0),
-        constantY +
-            (index % modulusY) * dY +
-            (index > group2ThresholdY ? group2ConstantY : 0),
-      );
-
-  static Generator<Offset> topBottomStyle1(double group2ConstantY) => grouping2(
-    dX: 78,
-    dY: 12,
-    modulusX: 6,
-    modulusY: 24,
-    constantX: -25,
-    constantY: -60,
-    group2ConstantX: 0,
-    group2ConstantY: group2ConstantY,
-    group2ThresholdX: 0,
-    group2ThresholdY: 11,
-  );
-}
-
-
 extension FMapperMaterial on Mapper {
-  static Offset offset(Offset v) => v;
+  ///
+  /// keep
+  ///
+  static Offset keepOffset(Offset v) => v;
 
-  static Iterable<Offset> ofOffsetIterable(Iterable<Offset> v) => v;
+  static Iterable<Offset> keepOffsetIterable(Iterable<Offset> v) => v;
 
-  static Coordinate ofCoordinate(Coordinate v) => v;
+  static Coordinate keepCoordinate(Coordinate v) => v;
 
-  static Size ofSize(Size v) => v;
+  static Size keepSize(Size v) => v;
 
-  static Curve ofCurve(Curve v) => v;
+  static Curve keepCurve(Curve v) => v;
 
-  static Curve ofCurveFlipped(Curve v) => v.flipped;
+  static Curve keepCurveFlipped(Curve v) => v.flipped;
 
-  static BoxConstraints ofBoxConstraints(BoxConstraints v) => v;
+  static BoxConstraints keepBoxConstraints(BoxConstraints v) => v;
 
+  ///
+  /// box constraint
+  ///
   static BoxConstraints boxConstraintsLoosen(BoxConstraints constraints) =>
       constraints.loosen();
 
+  ///
+  /// cubic
+  ///
   static Cubic cubic_0231(Cubic cubic) =>
       Cubic(cubic.a, cubic.c, cubic.d, cubic.b);
 
   static Cubic cubic_1230(Cubic cubic) =>
       Cubic(cubic.b, cubic.c, cubic.d, cubic.a);
-}
-
-extension FMapperMaterialMapCubicOffset on Mapper<Map<Offset, CubicOffset>> {
-  static Map<Offset, CubicOffset> aCdB(Map<Offset, CubicOffset> points) =>
-      points.map(
-            (current, cubics) => MapEntry(
-          current,
-          cubics.mapXY(FMapperMaterial.cubic_0231),
-        ),
-      );
-
-  static Mapper<Map<Offset, CubicOffset>> of(Mapper<Cubic> mapper) =>
-          (corners) => corners.map(
-            (p, cubics) => MapEntry(p, cubics.mapXY(mapper)),
-      );
 }
 
 ///
@@ -1036,61 +968,61 @@ extension FExtruding2D on Extruding2D {
   static Extruding2D fromRectDirection(Rect rect, Direction2D direction) =>
       switch (direction) {
         Direction2DIn4.top || Direction2DIn8.top => () {
-          final origin = rect.topCenter;
-          return (width, length) => Rect.fromPoints(
-            origin + Offset(width / 2, 0),
-            origin + Offset(-width / 2, -length),
-          );
-        }(),
+            final origin = rect.topCenter;
+            return (width, length) => Rect.fromPoints(
+                  origin + Offset(width / 2, 0),
+                  origin + Offset(-width / 2, -length),
+                );
+          }(),
         Direction2DIn4.left || Direction2DIn8.left => () {
-          final origin = rect.centerLeft;
-          return (width, length) => Rect.fromPoints(
-            origin + Offset(0, width / 2),
-            origin + Offset(-length, -width / 2),
-          );
-        }(),
+            final origin = rect.centerLeft;
+            return (width, length) => Rect.fromPoints(
+                  origin + Offset(0, width / 2),
+                  origin + Offset(-length, -width / 2),
+                );
+          }(),
         Direction2DIn4.right || Direction2DIn8.right => () {
-          final origin = rect.centerRight;
-          return (width, length) => Rect.fromPoints(
-            origin + Offset(0, width / 2),
-            origin + Offset(length, -width / 2),
-          );
-        }(),
+            final origin = rect.centerRight;
+            return (width, length) => Rect.fromPoints(
+                  origin + Offset(0, width / 2),
+                  origin + Offset(length, -width / 2),
+                );
+          }(),
         Direction2DIn4.bottom || Direction2DIn8.bottom => () {
-          final origin = rect.bottomCenter;
-          return (width, length) => Rect.fromPoints(
-            origin + Offset(width / 2, 0),
-            origin + Offset(-width / 2, length),
-          );
-        }(),
+            final origin = rect.bottomCenter;
+            return (width, length) => Rect.fromPoints(
+                  origin + Offset(width / 2, 0),
+                  origin + Offset(-width / 2, length),
+                );
+          }(),
         Direction2DIn8.topLeft => () {
-          final origin = rect.topLeft;
-          return (width, length) => Rect.fromPoints(
-            origin,
-            origin + Offset(-length, -length) * DoubleExtension.sqrt1_2,
-          );
-        }(),
+            final origin = rect.topLeft;
+            return (width, length) => Rect.fromPoints(
+                  origin,
+                  origin + Offset(-length, -length) * DoubleExtension.sqrt1_2,
+                );
+          }(),
         Direction2DIn8.topRight => () {
-          final origin = rect.topRight;
-          return (width, length) => Rect.fromPoints(
-            origin,
-            origin + Offset(length, -length) * DoubleExtension.sqrt1_2,
-          );
-        }(),
+            final origin = rect.topRight;
+            return (width, length) => Rect.fromPoints(
+                  origin,
+                  origin + Offset(length, -length) * DoubleExtension.sqrt1_2,
+                );
+          }(),
         Direction2DIn8.bottomLeft => () {
-          final origin = rect.bottomLeft;
-          return (width, length) => Rect.fromPoints(
-            origin,
-            origin + Offset(-length, length) * DoubleExtension.sqrt1_2,
-          );
-        }(),
+            final origin = rect.bottomLeft;
+            return (width, length) => Rect.fromPoints(
+                  origin,
+                  origin + Offset(-length, length) * DoubleExtension.sqrt1_2,
+                );
+          }(),
         Direction2DIn8.bottomRight => () {
-          final origin = rect.bottomRight;
-          return (width, length) => Rect.fromPoints(
-            origin,
-            origin + Offset(length, length) * DoubleExtension.sqrt1_2,
-          );
-        }(),
+            final origin = rect.bottomRight;
+            return (width, length) => Rect.fromPoints(
+                  origin,
+                  origin + Offset(length, length) * DoubleExtension.sqrt1_2,
+                );
+          }(),
       };
 
   ///
@@ -1098,10 +1030,10 @@ extension FExtruding2D on Extruding2D {
   /// when [timesOrPlus] == false, its means that extruding value will be added on [height]
   ///
   Translator<double, Rect> translateOnSize(
-      double width,
-      double height, {
-        bool timesOrPlus = true,
-      }) {
+    double width,
+    double height, {
+    bool timesOrPlus = true,
+  }) {
     final calculating = timesOrPlus ? (v) => height * v : (v) => height + v;
     return (value) => this(width, calculating(value));
   }
@@ -1110,13 +1042,11 @@ extension FExtruding2D on Extruding2D {
       translateOnSize(width, 0, timesOrPlus: false);
 
   Translator<double, Rect> translateOfDimension(
-      double dimension, {
-        bool timesOrPlus = true,
-      }) =>
+    double dimension, {
+    bool timesOrPlus = true,
+  }) =>
       translateOnSize(dimension, dimension, timesOrPlus: timesOrPlus);
 }
-
-
 
 extension FWidgetParentBuilder on WidgetParentBuilder {
   WidgetBuilder builderFrom(Iterable<WidgetBuilder> children) =>
