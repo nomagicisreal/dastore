@@ -62,10 +62,7 @@ extension IterableIconAction on Iterable<IconAction> {
 
   double maxRadiusBy(BuildContext context) {
     final size = context.themeIcon.size ?? 24.0;
-    return reduceToNum(
-      reducer: math.max,
-      translator: (i) => i.icon.size ?? size,
-    );
+    return reduceTo<double>(math.max, (i) => i.icon.size ?? size);
   }
 }
 

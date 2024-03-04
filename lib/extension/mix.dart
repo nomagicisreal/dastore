@@ -1,24 +1,19 @@
 ///
 ///
 /// this file contains:
-/// [AnimatedOpacityIgnorePointer]
-///
-///
-///
 /// [CenterSizedBox], [SizedBoxCenter]
-///
-///
 ///
 /// [PositionedTransformOpacity]
 ///
 /// [CardPadding]
 /// [RowPadding], [RowPaddingColumn]
-/// [ColumnPadding], [ColumnPaddingRow]
-///
+/// [ColumnPadding], [ColumnPaddingRow], [ColumnText]
 ///
 ///
 /// [MaterialIconButton]
 /// [MaterialInkWell], [MaterialInkWellPadding]
+///
+/// [AnimatedOpacityIgnorePointer]
 /// [AnimatedContainerDefaultTextStyleText]
 ///
 ///
@@ -35,42 +30,12 @@
 ///
 ///
 ///
+///
+///
+///
+///
+///
 part of dastore;
-
-
-class AnimatedOpacityIgnorePointer extends StatelessWidget {
-  const AnimatedOpacityIgnorePointer({
-    super.key,
-    this.alwaysIncludeSemantics = false,
-    this.curve = Curves.linear,
-    this.onEnd,
-    required this.duration,
-    required this.ignoring,
-    required this.child,
-  });
-
-  final Duration duration;
-  final Curve curve;
-  final VoidCallback? onEnd;
-  final bool ignoring;
-  final bool alwaysIncludeSemantics;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      duration: duration,
-      curve: curve,
-      opacity: ignoring ? 0.0 : 1.0,
-      alwaysIncludeSemantics: alwaysIncludeSemantics,
-      onEnd: onEnd,
-      child: IgnorePointer(
-        ignoring: ignoring,
-        child: child,
-      ),
-    );
-  }
-}
 
 class CenterSizedBox extends StatelessWidget {
   const CenterSizedBox({
@@ -256,6 +221,12 @@ class CardPadding extends StatelessWidget {
   }
 }
 
+///
+///
+/// row
+///
+///
+
 class RowPadding extends StatelessWidget {
   const RowPadding({
     super.key,
@@ -351,6 +322,12 @@ class RowPaddingColumn extends StatelessWidget {
     );
   }
 }
+
+///
+///
+/// column
+///
+///
 
 class ColumnPadding extends StatelessWidget {
   const ColumnPadding({
@@ -477,6 +454,12 @@ class ColumnText extends StatelessWidget {
     );
   }
 }
+
+///
+///
+/// material
+///
+///
 
 class MaterialIconButton extends StatelessWidget {
   const MaterialIconButton({
@@ -954,6 +937,46 @@ class AnimatedContainerDefaultTextStyle extends StatelessWidget {
         onEnd: onEnd,
         style: textStyle,
         // child: child,
+        child: child,
+      ),
+    );
+  }
+}
+
+///
+///
+/// animated
+///
+///
+
+class AnimatedOpacityIgnorePointer extends StatelessWidget {
+  const AnimatedOpacityIgnorePointer({
+    super.key,
+    this.alwaysIncludeSemantics = false,
+    this.curve = Curves.linear,
+    this.onEnd,
+    required this.duration,
+    required this.ignoring,
+    required this.child,
+  });
+
+  final Duration duration;
+  final Curve curve;
+  final VoidCallback? onEnd;
+  final bool ignoring;
+  final bool alwaysIncludeSemantics;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      duration: duration,
+      curve: curve,
+      opacity: ignoring ? 0.0 : 1.0,
+      alwaysIncludeSemantics: alwaysIncludeSemantics,
+      onEnd: onEnd,
+      child: IgnorePointer(
+        ignoring: ignoring,
         child: child,
       ),
     );

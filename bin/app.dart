@@ -1,4 +1,5 @@
-import 'package:damath/damath.dart';
+import 'dart:async';
+
 import 'package:dastore/dastore.dart';
 import 'package:flutter/material.dart';
 
@@ -28,7 +29,16 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int value = 0;
 
-  void toggle() => value++;
+  late final StreamController<int> controller;
+
+  @override
+  void initState() {
+    controller = StreamController();
+    controller.add(0);
+    super.initState();
+  }
+
+  void toggle() => controller.add(++value);
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +46,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.grey,
       floatingActionButton: FloatingActionButton(onPressed: toggle),
       body: StreamWidget(
-        stream: FStream.ofInts(),
+        stream: controller.stream,
         builder: (context, value, child) => Center(
           child: Text(
             '$value',
