@@ -17,7 +17,7 @@
 /// [WSizedBox]
 /// [WColoredBox]
 /// [WTransform]
-/// [WPainting], [WClipping]
+/// [WCustomPaint], [WClipPath]
 ///
 ///
 ///
@@ -317,12 +317,12 @@ extension WColoredBox on ColoredBox {
 extension WTransform on Transform {
   static Transform transformFromDirection(
       Direction3DIn6 direction, {
-        Coordinate initialRadian = Coordinate.zero,
+        Space3 initialRadian = Space3.zero,
         double zDeep = 100,
         required Widget child,
       }) {
     Matrix4 instance() => Matrix4.identity();
-    return initialRadian == Coordinate.zero
+    return initialRadian == Space3.zero
         ? switch (direction) {
       Direction3DIn6.front => Transform(
         transform: instance(),
@@ -330,8 +330,8 @@ extension WTransform on Transform {
         child: child,
       ),
       Direction3DIn6.back => Transform(
-        transform: instance()..translate(Vector3(0, 0, -zDeep)),
         alignment: Alignment.center,
+        transform: instance()..translateOf(Space3.ofZ(-zDeep)),
         child: child,
       ),
       Direction3DIn6.left => Transform(
@@ -367,7 +367,7 @@ extension WTransform on Transform {
 ///
 ///
 ///
-extension WPainting on CustomPaint {
+extension WCustomPaint on CustomPaint {
   static CustomPaint drawRRegularPolygon(
       RRegularPolygon polygon, {
         required PaintFrom pathFrom,
@@ -381,27 +381,27 @@ extension WPainting on CustomPaint {
 
 ///
 ///
-/// [WClipping._shape]
-///   [WClipping.shapeCircle]
-///   [WClipping.shapeOval]
-///   [WClipping.shapeStar]
-///   [WClipping.shapeStadium]
-///   [WClipping.shapeBeveledRectangle]
-///   [WClipping.shapeRoundedRectangle]
-///   [WClipping.shapeContinuousRectangle]
+/// [WClipPath._shape]
+///   [WClipPath.shapeCircle]
+///   [WClipPath.shapeOval]
+///   [WClipPath.shapeStar]
+///   [WClipPath.shapeStadium]
+///   [WClipPath.shapeBeveledRectangle]
+///   [WClipPath.shapeRoundedRectangle]
+///   [WClipPath.shapeContinuousRectangle]
 ///
-/// [WClipping.rRectColored]
+/// [WClipPath.rRectColored]
 ///
-/// [WClipping.pathReClipNever]
-/// [WClipping.pathRectFromZeroToSize]
-/// [WClipping.pathPolygonRRegular]
-/// [WClipping.pathPolygonRRegularDecoratedBox]
+/// [WClipPath.pathReClipNever]
+/// [WClipPath.pathRectFromZeroToSize]
+/// [WClipPath.pathPolygonRRegular]
+/// [WClipPath.pathPolygonRRegularDecoratedBox]
 ///
 ///
 /// there is no [BorderSide] when using [ShapeBorderClipper], See Also the comment above [FBorderSide]
 ///
 ///
-extension WClipping on ClipPath {
+extension WClipPath on ClipPath {
   static Widget _shape({
     required Key? key,
     required ShapeBorder shape,
