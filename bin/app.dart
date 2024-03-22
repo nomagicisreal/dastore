@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dastore/dastore.dart';
+// import 'package:dastore/dastore.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -45,14 +45,10 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.grey,
       floatingActionButton: FloatingActionButton(onPressed: toggle),
-      body: StreamWidget(
-        stream: controller.stream,
-        builder: (context, value, child) => Center(
-          child: Text(
-            '$value',
-            style: TextStyle(fontSize: 48),
-          ),
-        ),
+      body: Container(
+        height: 100,
+        width: 100,
+        color: Colors.brown,
       ),
     );
   }
