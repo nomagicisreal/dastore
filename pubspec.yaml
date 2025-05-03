@@ -6,15 +6,17 @@ repository: https://github.com/nomagicisreal/dastore
 environment:
   sdk: ^3.2.3
 
+
 dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.6
-  damath: ^0.0.18
+  damath: ^0.0.32
+  cloud_firestore: ^3.2.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
   lints: ^2.1.0
   test: ^1.24.0
