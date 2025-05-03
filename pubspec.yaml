@@ -11,8 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
 
-  damath: ^0.0.32
   cloud_firestore: ^3.2.0
+  damath: ^0.0.32
+  datter: ^0.0.18
 
 dev_dependencies:
   flutter_test:
